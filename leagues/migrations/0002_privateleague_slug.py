@@ -39,6 +39,10 @@ class Migration(migrations.Migration):
             field=models.SlugField(blank=True, max_length=80, null=True),
         ),
         migrations.RunPython(populate_slugs, migrations.RunPython.noop),
+        migrations.RunSQL(
+            sql='DROP INDEX IF EXISTS leagues_privateleague_slug_9d6a99c8_like;',
+            reverse_sql=migrations.RunSQL.noop,
+        ),
         migrations.AlterField(
             model_name='privateleague',
             name='slug',
