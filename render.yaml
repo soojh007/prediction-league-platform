@@ -1,11 +1,14 @@
 services:
   - type: web
     name: prediction-league
-    env: python
+    runtime: python
     plan: starter
     buildCommand: ./build.sh
+    preDeployCommand: python manage.py migrate
     startCommand: gunicorn prediction_platform.wsgi:application
     envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.4"
       - key: DEBUG
         value: "False"
       - key: SECRET_KEY
