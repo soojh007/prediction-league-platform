@@ -4,6 +4,29 @@ from django.db import migrations, models
 from django.utils.text import slugify
 
 
+def ensure_slug_column(apps, schema_editor):
+    table_name = 'leagues_privateleague'
+    column_name = 'slug'
+
+    with schema_editor.connection.cursor() as cursor:
+        if schema_editor.connection.vendor == 'postgresql':
+            cursor.execute(
+                f'ALTER TABLE "{table_name}" '
+                f'ADD COLUMN IF NOT EXISTS "{column_name}" varchar(80) NULL;'
+            )
+            return
+
+        existing_columns = [
+            row[1]
+            for row in cursor.execute(f'PRAGMA table_info("{table_name}")').fetchall()
+        ]
+        if column_name not in existing_columns:
+            cursor.execute(
+                f'ALTER TABLE "{table_name}" '
+                f'ADD COLUMN "{column_name}" varchar(80) NULL;'
+            )
+
+
 def populate_slugs(apps, schema_editor):
     PrivateLeague = apps.get_model('leagues', 'PrivateLeague')
     used_slugs = set()
@@ -26,6 +49,42 @@ def populate_slugs(apps, schema_editor):
         used_slugs.add(slug)
 
 
+def enforce_unique_slugs(apps, schema_editor):
+    table_name = 'leagues_privateleague'
+    column_name = 'slug'
+
+    with schema_editor.connection.cursor() as cursor:
+        if schema_editor.connection.vendor == 'postgresql':
+            cursor.execute(
+                'DROP INDEX IF EXISTS "leagues_privateleague_slug_9d6a99c8_like";'
+            )
+            cursor.execute(
+                f'ALTER TABLE "{table_name}" ALTER COLUMN "{column_name}" SET NOT NULL;'
+            )
+            cursor.execute(
+                """
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1
+                        FROM pg_constraint
+                        WHERE conname = 'leagues_privateleague_slug_key'
+                    ) THEN
+                        ALTER TABLE "leagues_privateleague"
+                        ADD CONSTRAINT "leagues_privateleague_slug_key" UNIQUE ("slug");
+                    END IF;
+                END $$;
+                """
+            )
+            return
+
+        cursor.execute(
+            f'CREATE UNIQUE INDEX IF NOT EXISTS '
+            f'"leagues_privateleague_slug_unique" '
+            f'ON "{table_name}" ("{column_name}");'
+        )
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -33,19 +92,29 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='privateleague',
-            name='slug',
-            field=models.SlugField(blank=True, max_length=80, null=True),
+        migrations.SeparateDatabaseAndState(
+            database_operations=[
+                migrations.RunPython(ensure_slug_column, migrations.RunPython.noop),
+            ],
+            state_operations=[
+                migrations.AddField(
+                    model_name='privateleague',
+                    name='slug',
+                    field=models.SlugField(blank=True, max_length=80, null=True),
+                ),
+            ],
         ),
         migrations.RunPython(populate_slugs, migrations.RunPython.noop),
-        migrations.RunSQL(
-            sql='DROP INDEX IF EXISTS leagues_privateleague_slug_9d6a99c8_like;',
-            reverse_sql=migrations.RunSQL.noop,
-        ),
-        migrations.AlterField(
-            model_name='privateleague',
-            name='slug',
-            field=models.SlugField(blank=True, max_length=80, unique=True),
+        migrations.SeparateDatabaseAndState(
+            database_operations=[
+                migrations.RunPython(enforce_unique_slugs, migrations.RunPython.noop),
+            ],
+            state_operations=[
+                migrations.AlterField(
+                    model_name='privateleague',
+                    name='slug',
+                    field=models.SlugField(blank=True, max_length=80, unique=True),
+                ),
+            ],
         ),
     ]
