@@ -1,0 +1,7 @@
+{% if team.logo_url %}
+    <img class="team-badge" src="{{ team.logo_url }}" alt="{{ team.name }} badge" loading="lazy">
+{% else %}
+    <span class="team-badge team-badge-fallback" style="background: {{ team.primary_color }}">
+        {{ team.short_name|default:team.name|slice:":3" }}
+    </span>
+{% endif %}

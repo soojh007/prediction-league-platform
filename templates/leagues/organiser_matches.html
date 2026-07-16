@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}{{ league.name }} matches{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Organiser</p>
+        <h1>Matches</h1>
+        <p class="helper-text">{{ league.name }} · {{ league.competition.name }}</p>
+    </div>
+    <div class="organiser-actions">
+        <a class="primary-button" href="{% url 'organiser_match_create' league.pk %}">Add match</a>
+        <a class="secondary-button" href="{% url 'organiser_league_settings' league.pk %}">Settings</a>
+        <a class="secondary-button" href="{% url 'organiser_leagues' %}">Back</a>
+    </div>
+</section>
+
+<section class="panel">
+    <div class="section-heading compact">
+        <div>
+            <p class="eyebrow">Fixture control</p>
+            <h2>Update matches and scores</h2>
+        </div>
+        <span class="pill">{{ matches|length }} matches</span>
+    </div>
+
+    <div class="admin-match-list">
+        {% for match in matches %}
+            <div class="admin-match-row">
+                <div class="admin-match-main">
+                    <strong class="match-title">
+                        {% include "leagues/partials/team_badge.html" with team=match.home_team %}
+                        {{ match.home_team.name }}
+                        <span>vs</span>
+                        {% include "leagues/partials/team_badge.html" with team=match.away_team %}
+                        {{ match.away_team.name }}
+                    </strong>
+                    <span>
+                        {{ match.kickoff_time|date:"d M, g:i a" }}
+                        {% if match.stage %} · {{ match.stage }}{% endif %}
+                        {% if match.venue %} · {{ match.venue }}{% endif %}
+                    </span>
+                </div>
+                <div class="admin-match-meta">
+                    <span class="pill">{{ match.get_status_display }}</span>
+                    {% if match.home_score is not None and match.away_score is not None %}
+                        <strong>{{ match.home_score }} - {{ match.away_score }}</strong>
+                    {% else %}
+                        <span class="helper-text">No score</span>
+                    {% endif %}
+                    {% if match.featured %}
+                        <span class="pill">Featured</span>
+                    {% endif %}
+                </div>
+                <div class="organiser-actions">
+                    <a class="predict-button" href="{% url 'organiser_match_edit' league.pk match.pk %}">Edit</a>
+                    <a class="primary-button" href="{% url 'organiser_match_result' league.pk match.pk %}">Score</a>
+                    <a class="danger-button" href="{% url 'organiser_match_delete' league.pk match.pk %}">Delete</a>
+                </div>
+            </div>
+        {% empty %}
+            <p class="helper-text">No matches have been added to this competition yet.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

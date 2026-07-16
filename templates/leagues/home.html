@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}{% if league %}{{ league.name }}{% else %}Prediction League Platform{% endif %}{% endblock %}
+
+{% block content %}
+<section class="hero{% if not league or league.competition.name == 'Premier League' %} hero-premier-league{% endif %}">
+    <div>
+        <p class="eyebrow">
+            {% if league %}
+                {{ league.name }}
+            {% else %}
+                2026-27 EPL prediction league
+            {% endif %}
+        </p>
+        <h1>
+            {% if league and league.landing_headline %}
+                {{ league.landing_headline }}
+            {% else %}
+                Back your club. Predict their matches. Climb the table.
+            {% endif %}
+        </h1>
+        <p>
+            {% if league and league.landing_intro %}
+                {{ league.landing_intro }}
+            {% elif league %}
+                Join {{ league.name }} where you only need to predict the team you support. Simple enough for casual fans, competitive enough for bragging rights.
+            {% else %}
+                Join the 2026-27 EPL prediction league where you only need to predict the team you support. Simple enough for casual fans, competitive enough for bragging rights.
+            {% endif %}
+        </p>
+        <div class="hero-actions">
+            {% if league %}
+                <a class="primary-button" href="{% url 'signup' %}?league={{ league.slug }}">
+                    {% if league.landing_cta %}{{ league.landing_cta }}{% else %}Join {{ league.name }}{% endif %}
+                </a>
+                <a class="secondary-button" href="{% url 'login' %}?league={{ league.slug }}">Player login</a>
+            {% else %}
+                <a class="primary-button" href="{% url 'signup' %}">Join the 2026-27 EPL League</a>
+                <a class="secondary-button" href="{% url 'login' %}">Player login</a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<section class="intro-panel panel">
+    <div>
+        <p class="eyebrow">How it works</p>
+        <h2>
+            {% if league and league.landing_how_title %}
+                {{ league.landing_how_title }}
+            {% else %}
+                Pick one club and follow their season.
+            {% endif %}
+        </h2>
+    </div>
+    <p>
+        {% if league and league.landing_how_body %}
+            {{ league.landing_how_body }}
+        {% else %}
+            Instead of asking every player to predict every match, this league keeps it fair and light: choose your supported club, predict their fixtures, and compete on a leaderboard built around the same scoring rules.
+        {% endif %}
+    </p>
+</section>
+
+<section class="feature-grid landing-features">
+    <div class="panel">
+        <p class="feature-icon">1</p>
+        <p class="eyebrow">Step 1</p>
+        <h2>Choose your club</h2>
+        <p>Start with the EPL team you support, then your match list stays focused on that club.</p>
+    </div>
+    <div class="panel">
+        <p class="feature-icon">2</p>
+        <p class="eyebrow">Step 2</p>
+        <h2>Predict each match</h2>
+        <p>Submit scores before kickoff, edit while the match is still open, and watch the points land after results.</p>
+    </div>
+    <div class="panel">
+        <p class="feature-icon">3</p>
+        <p class="eyebrow">Step 3</p>
+        <h2>Beat your friends</h2>
+        <p>Compare totals, exact scores, and league positions throughout the season.</p>
+    </div>
+</section>
+
+<section class="supporter-callout panel">
+    <div>
+        <p class="eyebrow">For organisers</p>
+        <h2>Want to run a private prediction league?</h2>
+        <p>I’m opening organiser access carefully while the EPL supporter mode is tested first.</p>
+    </div>
+    <p class="organiser-note">Organiser access is invite-only for now.</p>
+</section>
+{% endblock %}

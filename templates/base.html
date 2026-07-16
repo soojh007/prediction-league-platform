@@ -1,0 +1,51 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Prediction League{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'leagues/styles.css' %}?v=20260715-api-sync">
+</head>
+<body>
+    <nav class="topbar">
+        <a class="brand" href="{% url 'home' %}">Prediction League</a>
+        <div class="nav-links">
+            {% if user.is_authenticated %}
+                {% if nav_primary_league %}
+                    {% if nav_league_count == 1 %}
+                        <a href="{{ nav_primary_league.get_absolute_url }}">My league</a>
+                    {% else %}
+                        <a href="{% url 'dashboard' %}">My leagues</a>
+                    {% endif %}
+                {% endif %}
+                <a href="{% url 'dashboard' %}">Dashboard</a>
+                {% if user.is_staff or user.is_superuser %}
+                    <a href="{% url 'organiser_leagues' %}">Organiser</a>
+                {% endif %}
+                <a href="{% url 'profile' %}">Profile</a>
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit">Logout</button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}">Login</a>
+                <a class="nav-cta" href="{% url 'signup' %}">Join league</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <main>
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="message {{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Delete match{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Organiser</p>
+        <h1>Delete match</h1>
+        <p class="helper-text">{{ league.name }}</p>
+    </div>
+    <a class="secondary-button" href="{% url 'organiser_matches' league.pk %}">Back</a>
+</section>
+
+<section class="panel form-panel">
+    <div class="section-heading compact">
+        <div>
+            <p class="eyebrow">Confirm deletion</p>
+            <h2>{{ match.home_team.name }} vs {{ match.away_team.name }}</h2>
+            <p class="helper-text">{{ match.kickoff_time|date:"d M, g:i a" }}</p>
+        </div>
+    </div>
+
+    {% if prediction_count %}
+        <p class="helper-text">
+            This match cannot be deleted because {{ prediction_count }} prediction{{ prediction_count|pluralize }} already exist.
+            Edit the fixture instead if the details are wrong.
+        </p>
+        <a class="primary-button" href="{% url 'organiser_match_edit' league.pk match.pk %}">Edit match</a>
+    {% else %}
+        <p class="helper-text">No predictions have been made for this match, so it is safe to delete.</p>
+        <form method="post" class="form-stack">
+            {% csrf_token %}
+            <button class="danger-button" type="submit">Delete match</button>
+        </form>
+    {% endif %}
+</section>
+{% endblock %}

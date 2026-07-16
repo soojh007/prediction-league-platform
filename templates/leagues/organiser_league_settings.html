@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}{{ league.name }} settings{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Organiser</p>
+        <h1>{{ league.name }}</h1>
+        <p class="helper-text">Public page: <a href="{% url 'public_league_landing' league.slug %}">/play/{{ league.slug }}/</a></p>
+    </div>
+    <div class="organiser-actions">
+        <a class="predict-button" href="{% url 'organiser_teams' league.pk %}">Manage teams</a>
+        <a class="predict-button" href="{% url 'organiser_matches' league.pk %}">Manage matches</a>
+        <a class="secondary-button" href="{% url 'organiser_leagues' %}">Back</a>
+    </div>
+</section>
+
+<section class="content-grid organiser-settings-grid">
+    <div class="panel">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">League settings</p>
+                <h2>Rules and landing page</h2>
+            </div>
+        </div>
+
+        <form method="post" class="form-stack settings-form">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="form-divider"></div>
+            <p class="eyebrow">API setup</p>
+            {{ branding_form.as_p }}
+            <button class="primary-button" type="submit">Save settings</button>
+        </form>
+    </div>
+
+    <div class="panel">
+        <div class="section-heading compact">
+            <div>
+                <p class="eyebrow">Fixture sync</p>
+                <h2>Import from API-Football</h2>
+            </div>
+        </div>
+
+        <div class="sync-status">
+            {% if league.competition.last_fixture_sync_at %}
+                <strong>Last sync: {{ league.competition.last_fixture_sync_at|date:"d M, g:i a" }}</strong>
+                <span>{{ league.competition.last_fixture_sync_summary }}</span>
+            {% else %}
+                <strong>No sync yet</strong>
+                <span>Configure the API league ID and season, then run a fixture sync.</span>
+            {% endif %}
+        </div>
+
+        <form method="post" action="{% url 'organiser_sync_fixtures' league.pk %}" class="form-stack sync-form">
+            {% csrf_token %}
+            {{ sync_form.as_p }}
+            <button class="primary-button" type="submit">Sync fixtures</button>
+        </form>
+    </div>
+
+    <div class="panel">
+        <div class="section-heading compact">
+            <div>
+                <p class="eyebrow">Players</p>
+                <h2>{{ members|length }} members</h2>
+            </div>
+        </div>
+
+        <div class="leaderboard-list">
+            {% for member in members %}
+                <div class="leaderboard-row member-row">
+                    <div>
+                        <strong>
+                            {% if member.user.first_name %}
+                                {{ member.user.first_name }}
+                            {% else %}
+                                {{ member.user.username }}
+                            {% endif %}
+                        </strong>
+                        <span>{{ member.user.email|default:"No email" }}</span>
+                    </div>
+                    <div>
+                        <span class="pill">{{ member.get_role_display }}</span>
+                        {% if member.supported_team %}
+                            <span class="pill">{{ member.supported_team.name }}</span>
+                        {% elif league.prediction_mode == 'SUPPORTER' %}
+                            <span class="pill">No club</span>
+                        {% endif %}
+                    </div>
+                </div>
+            {% empty %}
+                <p class="helper-text">No players yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

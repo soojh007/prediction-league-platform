@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Choose club{% endblock %}
+
+{% block content %}
+<section class="panel form-panel">
+    <p class="eyebrow">{{ league.name }}</p>
+    <h1>Choose your supported club</h1>
+    {% if has_predictions %}
+        <p class="helper-text">
+            Your supported club is locked because you have already started predicting in this league.
+        </p>
+        {% if membership.supported_team %}
+            <p class="team-pill">
+                {% include "leagues/partials/team_badge.html" with team=membership.supported_team %}
+                {{ membership.supported_team.name }}
+            </p>
+        {% endif %}
+        <a class="primary-button" href="{{ league.get_absolute_url }}">Back to league</a>
+    {% else %}
+        <form method="post" class="form-stack">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button class="primary-button" type="submit">Save club</button>
+        </form>
+    {% endif %}
+</section>
+{% endblock %}

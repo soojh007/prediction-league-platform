@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Update result{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Organiser</p>
+        <h1>Update score</h1>
+        <p class="helper-text">{{ league.name }}</p>
+    </div>
+    <a class="secondary-button" href="{% url 'organiser_matches' league.pk %}">Back</a>
+</section>
+
+<section class="panel form-panel">
+    <div class="section-heading compact">
+        <div>
+            <p class="eyebrow">Result</p>
+            <h2>{{ match.home_team.name }} vs {{ match.away_team.name }}</h2>
+            <p class="helper-text">{{ match.kickoff_time|date:"d M, g:i a" }}</p>
+        </div>
+    </div>
+
+    <form method="post" class="form-stack settings-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button class="primary-button" type="submit">Save result</button>
+    </form>
+</section>
+{% endblock %}

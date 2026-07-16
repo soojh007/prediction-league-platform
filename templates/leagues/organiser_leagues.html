@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Organiser leagues{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Organiser</p>
+        <h1>Manage leagues</h1>
+    </div>
+    <a class="primary-button" href="{% url 'create_league' %}">Create league</a>
+</section>
+
+<section class="panel">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">League setup</p>
+            <h2>Active prediction leagues</h2>
+        </div>
+    </div>
+
+    <div class="league-list">
+        {% for league in leagues %}
+            <div class="league-card organiser-card">
+                <div>
+                    <strong>{{ league.name }}</strong>
+                    <span>{{ league.competition.name }} · {{ league.get_prediction_mode_display }}</span>
+                    <span class="helper-text">Public page: /play/{{ league.slug }}/ · Join code {{ league.join_code }}</span>
+                </div>
+                <div class="organiser-actions">
+                    <span class="pill">{{ league.memberships.count }} players</span>
+                    <a class="predict-button" href="{% url 'public_league_landing' league.slug %}">Preview</a>
+                    <a class="predict-button" href="{% url 'organiser_matches' league.pk %}">Matches</a>
+                    <a class="primary-button" href="{% url 'organiser_league_settings' league.pk %}">Settings</a>
+                </div>
+            </div>
+        {% empty %}
+            <p class="helper-text">No leagues yet. Create one to start testing.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

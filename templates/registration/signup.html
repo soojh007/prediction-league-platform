@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Sign up{% endblock %}
+
+{% block content %}
+<section class="auth-card panel">
+    <p class="eyebrow">Create account</p>
+    <h1>Start predicting</h1>
+
+    <form method="post" class="form-stack">
+        {% csrf_token %}
+        {% if target_league %}
+            <input type="hidden" name="league" value="{{ target_league.slug }}">
+        {% endif %}
+        {% if form.non_field_errors %}
+            <div class="errorlist">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <p>
+            {{ form.username.label_tag }}
+            {{ form.username }}
+            {% if form.username.help_text %}
+                <span class="helper-text">{{ form.username.help_text }}</span>
+            {% endif %}
+            {{ form.username.errors }}
+        </p>
+
+        <p>
+            {{ form.email.label_tag }}
+            {{ form.email }}
+            {{ form.email.errors }}
+        </p>
+
+        <p>
+            {{ form.password1.label_tag }}
+            {{ form.password1 }}
+            {{ form.password1.errors }}
+        </p>
+
+        <ul class="password-rules" id="passwordRules">
+            <li data-rule="similar">Not too similar to your username or email</li>
+            <li data-rule="length">At least 8 characters</li>
+            <li data-rule="common">Not a commonly used password</li>
+            <li data-rule="numeric">Not entirely numeric</li>
+        </ul>
+
+        <p>
+            {{ form.password2.label_tag }}
+            {{ form.password2 }}
+            {{ form.password2.errors }}
+        </p>
+        <button class="primary-button" type="submit">Create account</button>
+    </form>
+
+    <p class="helper-text">
+        Already registered?
+        {% if target_league %}
+            <a href="{% url 'login' %}?league={{ target_league.slug }}">Login</a>
+        {% else %}
+            <a href="{% url 'login' %}">Login</a>
+        {% endif %}
+    </p>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const commonPasswords = new Set([
+        'password', 'password123', '123456', '12345678', 'qwerty',
+        'abc123', 'football', 'letmein', 'admin', 'welcome'
+    ]);
+
+    const usernameInput = document.getElementById('id_username');
+    const emailInput = document.getElementById('id_email');
+    const passwordInput = document.getElementById('id_password1');
+    const ruleItems = document.querySelectorAll('#passwordRules [data-rule]');
+
+    function normalise(value) {
+        return (value || '').trim().toLowerCase();
+    }
+
+    function isTooSimilar(password, username, email) {
+        const emailName = email.split('@')[0] || '';
+        const candidates = [username, emailName].filter(value => value.length >= 3);
+        return candidates.some(value => password.includes(value) || value.includes(password));
+    }
+
+    function updatePasswordRules() {
+        const password = normalise(passwordInput.value);
+        const username = normalise(usernameInput.value);
+        const email = normalise(emailInput.value);
+
+        const checks = {
+            similar: password.length > 0 && !isTooSimilar(password, username, email),
+            length: password.length >= 8,
+            common: password.length > 0 && !commonPasswords.has(password),
+            numeric: password.length > 0 && !/^\d+$/.test(password)
+        };
+
+        ruleItems.forEach(item => {
+            const passed = checks[item.dataset.rule];
+            item.classList.toggle('rule-ok', passed);
+            item.classList.toggle('rule-bad', !passed);
+        });
+    }
+
+    [usernameInput, emailInput, passwordInput].forEach(input => {
+        input.addEventListener('input', updatePasswordRules);
+    });
+
+    updatePasswordRules();
+</script>
+{% endblock %}

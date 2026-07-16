@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}{% if match %}Edit match{% else %}Add match{% endif %}{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Organiser</p>
+        <h1>{% if match %}Edit match{% else %}Add match{% endif %}</h1>
+        <p class="helper-text">{{ league.name }}</p>
+    </div>
+    <a class="secondary-button" href="{% url 'organiser_matches' league.pk %}">Back</a>
+</section>
+
+<section class="panel form-panel">
+    <div class="section-heading compact">
+        <div>
+            <p class="eyebrow">Fixture details</p>
+            <h2>
+                {% if match %}
+                    {{ match.home_team.name }} vs {{ match.away_team.name }}
+                {% else %}
+                    New fixture
+                {% endif %}
+            </h2>
+        </div>
+    </div>
+
+    <form method="post" class="form-stack settings-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button class="primary-button" type="submit">{% if match %}Save match{% else %}Add match{% endif %}</button>
+    </form>
+</section>
+{% endblock %}

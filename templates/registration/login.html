@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<section class="auth-card panel">
+    <p class="eyebrow">{{ login_eyebrow|default:"Welcome back" }}</p>
+    <h1>{{ login_title|default:"Login" }}</h1>
+
+    <form method="post" class="form-stack">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button class="primary-button" type="submit">{{ login_title|default:"Login" }}</button>
+    </form>
+
+    <p class="helper-text auth-links">
+        <a href="{% url 'password_reset' %}">Forgot password?</a>
+        {% if show_signup_link %}
+            <span>No account yet? <a href="{% url 'signup' %}">Create one</a></span>
+        {% endif %}
+    </p>
+</section>
+{% endblock %}

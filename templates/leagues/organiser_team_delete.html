@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Delete team{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Organiser</p>
+        <h1>Delete team</h1>
+        <p class="helper-text">{{ league.name }}</p>
+    </div>
+    <a class="secondary-button" href="{% url 'organiser_teams' league.pk %}">Back</a>
+</section>
+
+<section class="panel form-panel">
+    <div class="section-heading compact">
+        <div>
+            <p class="eyebrow">Confirm deletion</p>
+            <h2>{{ team.name }}</h2>
+            <p class="helper-text">{{ league.competition.name }}</p>
+        </div>
+    </div>
+
+    {% if match_count or member_count %}
+        <p class="helper-text">
+            This team cannot be deleted because it is used by {{ match_count }} match{{ match_count|pluralize }}
+            and {{ member_count }} member preference{{ member_count|pluralize }}.
+            Edit the team name or short name instead.
+        </p>
+        <a class="primary-button" href="{% url 'organiser_team_edit' league.pk team.pk %}">Edit team</a>
+    {% else %}
+        <p class="helper-text">This team is not used yet, so it is safe to delete.</p>
+        <form method="post" class="form-stack">
+            {% csrf_token %}
+            <button class="danger-button" type="submit">Delete team</button>
+        </form>
+    {% endif %}
+</section>
+{% endblock %}

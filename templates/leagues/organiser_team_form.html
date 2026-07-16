@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}{% if team %}Edit team{% else %}Add team{% endif %}{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Organiser</p>
+        <h1>{% if team %}Edit team{% else %}Add team{% endif %}</h1>
+        <p class="helper-text">{{ league.name }}</p>
+    </div>
+    <a class="secondary-button" href="{% url 'organiser_teams' league.pk %}">Back</a>
+</section>
+
+<section class="panel form-panel">
+    <div class="section-heading compact">
+        <div>
+            <p class="eyebrow">Club details</p>
+            <h2>{% if team %}{{ team.name }}{% else %}New team{% endif %}</h2>
+        </div>
+    </div>
+
+    <form method="post" class="form-stack settings-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button class="primary-button" type="submit">{% if team %}Save team{% else %}Add team{% endif %}</button>
+    </form>
+</section>
+{% endblock %}

@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}{{ league.name }}{% endblock %}
+
+{% block content %}
+<section class="league-hero{% if league.competition.name == 'Premier League' %} hero-premier-league{% endif %}">
+    <div>
+        <div class="hero-league-title">
+            {% include "leagues/partials/competition_logo.html" with competition=league.competition %}
+            <p class="eyebrow">{{ league.competition.name }}</p>
+        </div>
+        <h1>{{ league.name }}</h1>
+        <p>{{ league.get_prediction_mode_display }}</p>
+    </div>
+</section>
+
+{% if league.prediction_mode == 'SUPPORTER' %}
+    <section class="panel supporter-panel">
+        <div>
+            <p class="eyebrow">Supported club</p>
+            {% if membership.supported_team %}
+                <h2 class="with-badge">
+                    {% include "leagues/partials/team_badge.html" with team=membership.supported_team %}
+                    {{ membership.supported_team.name }}
+                </h2>
+                {% if has_predictions %}
+                    <p class="helper-text">Club locked after your first prediction.</p>
+                {% else %}
+                    <p class="helper-text">You only predict matches involving this club.</p>
+                {% endif %}
+            {% else %}
+                <h2>Choose your club</h2>
+                <p class="helper-text">Pick your club before predicting.</p>
+            {% endif %}
+        </div>
+        {% if has_predictions %}
+            <span class="disabled-button">Locked</span>
+        {% else %}
+            <a class="secondary-button" href="{% url 'choose_team' league.pk %}">Change</a>
+        {% endif %}
+    </section>
+{% endif %}
+
+<section class="league-status-grid">
+    <div class="status-card">
+        <span>Your rank</span>
+        <strong>{% if league_status.rank %}#{{ league_status.rank }}{% else %}-{% endif %}</strong>
+        <small>{{ league_status.total_points }} points</small>
+    </div>
+    <div class="status-card">
+        <span>Behind leader</span>
+        <strong>{{ league_status.points_behind }}</strong>
+        <small>points to catch up</small>
+    </div>
+    <div class="status-card">
+        <span>Predicted</span>
+        <strong>{{ league_status.predicted_count }}/{{ league_status.total_matches }}</strong>
+        <small>{{ league_status.completion_percent }}% complete</small>
+    </div>
+    <div class="status-card next-prediction-card">
+        <span>Next prediction</span>
+        {% if league_status.next_prediction %}
+            <strong>
+                {{ league_status.next_prediction.home_team.name }}
+                vs
+                {{ league_status.next_prediction.away_team.name }}
+            </strong>
+            <a href="{% url 'predict' league.pk league_status.next_prediction.pk %}">Predict now</a>
+        {% else %}
+            <strong>All caught up</strong>
+            <small>No open predictions waiting.</small>
+        {% endif %}
+    </div>
+</section>
+
+<section class="content-grid">
+    <div class="panel">
+        <div class="section-heading compact">
+            <div>
+                <p class="eyebrow">Predictions</p>
+                <h2>Matchday view</h2>
+            </div>
+            <span class="pill">{{ matches|length }} matches</span>
+        </div>
+
+        <div class="matchday-list">
+            {% for matchday in matchdays %}
+                <section class="matchday-group">
+                    <div class="matchday-heading">
+                        <h3>{{ matchday.date|date:"D, d M" }}</h3>
+                        <span>{{ matchday.matches|length }} match{{ matchday.matches|length|pluralize:"es" }}</span>
+                    </div>
+
+                    <div class="fixture-list">
+                        {% for match in matchday.matches %}
+                            <div class="fixture-card">
+                                <div class="fixture-main">
+                                    <strong class="match-title">
+                                        {% include "leagues/partials/team_badge.html" with team=match.home_team %}
+                                        {{ match.home_team.name }}
+                                        <span>vs</span>
+                                        {% include "leagues/partials/team_badge.html" with team=match.away_team %}
+                                        {{ match.away_team.name }}
+                                    </strong>
+                                    <span class="match-meta">{{ match.kickoff_time|date:"g:i a" }}{% if match.featured %} · Featured{% endif %}</span>
+                                </div>
+                                {% if match.status == 'FINISHED' %}
+                                    <span class="disabled-button">Finished</span>
+                                {% else %}
+                                    <a class="predict-button" href="{% url 'predict' league.pk match.pk %}">
+                                        {% if match.id in predictions %}Edit{% else %}Predict{% endif %}
+                                    </a>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% empty %}
+                <p class="helper-text">No matches are available for this mode yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="panel">
+        <p class="eyebrow">Leaderboard</p>
+        <h2>{{ league.get_ranking_mode_display }}</h2>
+        <div class="leaderboard-list">
+            {% for row in leaderboard %}
+                <div class="leaderboard-row">
+                    <span class="rank">{{ forloop.counter }}</span>
+                    <div class="leaderboard-main">
+                        <strong>{{ row.display_name }}</strong>
+                        <span>
+                            {% if row.supported_team %}
+                                {% include "leagues/partials/team_badge.html" with team=row.supported_team %}
+                                {{ row.supported_team.name }} ·
+                            {% endif %}
+                            {{ row.prediction_count }} predictions · {{ row.exact_scores }} exact
+                        </span>
+                    </div>
+                    <strong class="leaderboard-points">{{ row.total_points }}</strong>
+                </div>
+            {% empty %}
+                <p class="helper-text">No players yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

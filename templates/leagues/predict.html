@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Predict{% endblock %}
+
+{% block content %}
+<section class="panel form-panel">
+    <a href="{{ league.get_absolute_url }}">Back to league</a>
+    <p class="eyebrow">Prediction</p>
+    <h1 class="match-heading">
+        {% include "leagues/partials/team_badge.html" with team=match.home_team %}
+        {{ match.home_team.name }} vs
+        {% include "leagues/partials/team_badge.html" with team=match.away_team %}
+        {{ match.away_team.name }}
+    </h1>
+    <p class="helper-text">{{ match.kickoff_time|date:"d M, g:i a" }}</p>
+
+    {% if is_locked %}
+        <p class="helper-text">This match is finished, so predictions are locked.</p>
+        {% if prediction %}
+            <div class="locked-prediction">
+                <span>Your prediction</span>
+                <strong>{{ prediction.predicted_home_score }} - {{ prediction.predicted_away_score }}</strong>
+            </div>
+        {% endif %}
+        <a class="primary-button" href="{{ league.get_absolute_url }}">Back to league</a>
+    {% else %}
+        <form method="post" class="prediction-form">
+            {% csrf_token %}
+            <label>
+                {{ match.home_team.name }} score
+                {{ form.predicted_home_score }}
+            </label>
+            <label>
+                {{ match.away_team.name }} score
+                {{ form.predicted_away_score }}
+            </label>
+            <button class="primary-button" type="submit">Save prediction</button>
+        </form>
+    {% endif %}
+</section>
+{% endblock %}

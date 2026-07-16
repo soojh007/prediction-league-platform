@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Create league{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Admin setup</p>
+        <h1>Create a private league</h1>
+    </div>
+</section>
+
+<section class="panel form-panel">
+    <form method="post" class="form-stack">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button class="primary-button" type="submit">Create league</button>
+    </form>
+</section>
+{% endblock %}

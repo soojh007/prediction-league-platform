@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Prediction League Platform Prototype</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="topbar">
+        <div>
+            <strong>Prediction League</strong>
+            <span>Club predictor prototype</span>
+        </div>
+        <div class="nav-actions">
+            <button class="nav-button active" data-view="setup">Setup</button>
+            <button class="nav-button" data-view="player">Player</button>
+            <button class="nav-button" data-view="leaderboards">Leaderboards</button>
+        </div>
+    </nav>
+
+    <main>
+        <section class="hero">
+            <div>
+                <p class="eyebrow">Custom football prediction leagues</p>
+                <h1>Create leagues for EPL, SPL, or your own tournament.</h1>
+                <p>
+                    Let admins choose a competition, prediction mode, and scoring style.
+                    Players can predict every fixture, only their supported club, or selected featured matches.
+                </p>
+            </div>
+        </section>
+
+        <section class="view active" id="setup">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">Admin setup</p>
+                    <h2>Create a private league</h2>
+                </div>
+                <button id="resetPrototype" class="secondary-button">Reset sample</button>
+            </div>
+
+            <div class="setup-grid">
+                <form class="panel setup-form" id="leagueForm">
+                    <label>
+                        League name
+                        <input id="leagueName" type="text" value="Saturday Football Pool" maxlength="80">
+                    </label>
+
+                    <label>
+                        Competition
+                        <select id="competition">
+                            <option value="epl">Premier League</option>
+                            <option value="custom">Custom 8-club league</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        Prediction mode
+                        <select id="mode">
+                            <option value="supporter">Supported club only</option>
+                            <option value="featured">Featured matches only</option>
+                            <option value="all">All matches</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        Main leaderboard ranking
+                        <select id="ranking">
+                            <option value="total">Total points</option>
+                            <option value="average">Average points per prediction</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        Minimum predictions for average ranking
+                        <input id="minimumPredictions" type="number" min="1" max="30" value="5">
+                    </label>
+
+                    <fieldset>
+                        <legend>Scoring</legend>
+                        <div class="score-row">
+                            <span>Exact score</span>
+                            <strong>7</strong>
+                        </div>
+                        <div class="score-row">
+                            <span>Correct result</span>
+                            <strong>3</strong>
+                        </div>
+                        <div class="score-row">
+                            <span>Goal bonuses</span>
+                            <strong>+1 each</strong>
+                        </div>
+                    </fieldset>
+
+                    <button class="primary-button" type="submit">Save league setup</button>
+                </form>
+
+                <aside class="panel mode-preview">
+                    <p class="eyebrow">Mode preview</p>
+                    <h3 id="previewTitle">Supported club only</h3>
+                    <p id="previewText"></p>
+                    <div class="mode-metrics">
+                        <div>
+                            <span>Matches per casual player</span>
+                            <strong id="matchesPerPlayer">38</strong>
+                        </div>
+                        <div>
+                            <span>Fair ranking</span>
+                            <strong id="fairRanking">Total points</strong>
+                        </div>
+                        <div>
+                            <span>Best for</span>
+                            <strong id="bestFor">Fan groups</strong>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+
+            <div class="panel">
+                <div class="section-heading compact">
+                    <div>
+                        <p class="eyebrow">Competition teams</p>
+                        <h2 id="teamListTitle">Premier League clubs</h2>
+                    </div>
+                    <span class="pill" id="teamCount">8 shown</span>
+                </div>
+                <div class="club-grid" id="clubGrid"></div>
+            </div>
+        </section>
+
+        <section class="view" id="player">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">Player view</p>
+                    <h2 id="playerLeagueTitle">Saturday Football Pool</h2>
+                </div>
+                <span class="pill" id="playerModePill">Supported club only</span>
+            </div>
+
+            <div class="player-grid">
+                <div class="panel">
+                    <label>
+                        Your supported club
+                        <select id="supportedClub"></select>
+                    </label>
+                    <p class="helper-text" id="supporterHelp">
+                        Your match list changes based on the prediction mode.
+                    </p>
+                </div>
+
+                <div class="panel next-card">
+                    <p class="eyebrow">Next prediction deadline</p>
+                    <h3 id="nextDeadline">Saturday, 7:30 pm</h3>
+                    <p id="deadlineText">Predictions lock at kickoff.</p>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="section-heading compact">
+                    <div>
+                        <p class="eyebrow">Available predictions</p>
+                        <h2 id="fixtureTitle">Your upcoming matches</h2>
+                    </div>
+                    <span class="pill" id="fixtureCount">0 matches</span>
+                </div>
+                <div class="fixture-list" id="fixtureList"></div>
+            </div>
+        </section>
+
+        <section class="view" id="leaderboards">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">Fair rankings</p>
+                    <h2>Leaderboards by mode</h2>
+                </div>
+            </div>
+
+            <div class="leaderboard-grid">
+                <div class="panel">
+                    <p class="eyebrow">Main leaderboard</p>
+                    <h3 id="mainRankingTitle">Ranked by total points</h3>
+                    <table class="leaderboard-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>User</th>
+                                <th>Pred</th>
+                                <th>Exact</th>
+                                <th>Pts</th>
+                                <th>Avg</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboardRows"></tbody>
+                    </table>
+                </div>
+
+                <div class="panel">
+                    <p class="eyebrow">Club supporters</p>
+                    <h3>Average by chosen club</h3>
+                    <div class="club-leaderboard" id="clubLeaderboard"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
