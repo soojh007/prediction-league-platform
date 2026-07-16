@@ -27,4 +27,4 @@ services:
 
 databases:
   - name: prediction-league-db
-    plan: starter
+    plan: basic-256mb
