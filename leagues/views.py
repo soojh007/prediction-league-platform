@@ -19,17 +19,40 @@ DEFAULT_LEAGUE_NAME = '2026-27 EPL Prediction League'
 DEFAULT_LEAGUE_SLUG = 'epl2627'
 TARGET_LEAGUE_SESSION_KEY = 'target_league_slug'
 PLAYER_SESSION_AGE_SECONDS = 60 * 60 * 24 * 365 * 10
+HOST_LEAGUE_SLUGS = {
+    'epl2627': 'epl2627',
+    'spl2627': 'spl2627',
+}
+ADMIN_HOST_PREFIXES = {'admin', 'organiser', 'organizer'}
 
 
 def is_organiser(user):
     return user.is_authenticated and (user.is_staff or user.is_superuser)
 
 
+def get_host_prefix(request):
+    host = request.get_host().split(':', 1)[0].lower()
+    return host.split('.', 1)[0]
+
+
+def is_admin_host(request):
+    return get_host_prefix(request) in ADMIN_HOST_PREFIXES
+
+
+def get_host_league_slug(request):
+    return HOST_LEAGUE_SLUGS.get(get_host_prefix(request))
+
+
 class LeagueLoginView(LoginView):
     template_name = 'registration/login.html'
 
     def dispatch(self, request, *args, **kwargs):
+        if is_admin_host(request):
+            return redirect('admin_login')
+
         league_slug = request.GET.get('league')
+        if not league_slug:
+            league_slug = get_host_league_slug(request)
         if league_slug:
             request.session[TARGET_LEAGUE_SESSION_KEY] = league_slug
         return super().dispatch(request, *args, **kwargs)
@@ -75,7 +98,7 @@ class AdminLoginView(LoginView):
     template_name = 'registration/login.html'
 
     def get_success_url(self):
-        return '/dashboard/'
+        return '/organiser/leagues/'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -88,20 +111,26 @@ class AdminLoginView(LoginView):
 
 
 def home(request):
+    if is_admin_host(request):
+        if is_organiser(request.user):
+            return redirect('organiser_leagues')
+        return redirect('admin_login')
+
+    target_league = get_host_league(request) or get_default_league()
+
     if request.user.is_authenticated:
         if request.user.is_staff or request.user.is_superuser:
             return redirect('dashboard')
-        default_league = get_default_league()
-        if default_league is not None:
+        if target_league is not None:
             LeagueMembership.objects.get_or_create(
-                league=default_league,
+                league=target_league,
                 user=request.user,
             )
-            return redirect(default_league)
+            return redirect(target_league)
         return redirect('dashboard')
-    default_league = get_default_league()
-    if default_league is not None:
-        return public_league_landing(request, default_league.slug)
+
+    if target_league is not None:
+        return public_league_landing(request, target_league.slug)
     return render(request, 'leagues/home.html')
 
 
@@ -124,6 +153,9 @@ def public_league_landing(request, slug):
 
 
 def signup(request):
+    if is_admin_host(request):
+        return redirect('admin_login')
+
     target_league = get_target_league(request) or get_default_league()
 
     if request.method == 'POST':
@@ -160,8 +192,25 @@ def get_default_league():
     )
 
 
+def get_host_league(request):
+    league_slug = get_host_league_slug(request)
+    if not league_slug:
+        return None
+    return (
+        PrivateLeague.objects
+        .select_related('competition')
+        .filter(slug=league_slug)
+        .first()
+    )
+
+
 def get_target_league(request):
-    league_slug = request.GET.get('league') or request.POST.get('league') or request.session.get(TARGET_LEAGUE_SESSION_KEY)
+    league_slug = (
+        request.GET.get('league')
+        or request.POST.get('league')
+        or request.session.get(TARGET_LEAGUE_SESSION_KEY)
+        or get_host_league_slug(request)
+    )
     if not league_slug:
         return None
     return (
