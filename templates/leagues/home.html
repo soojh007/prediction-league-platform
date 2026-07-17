@@ -36,10 +36,23 @@
         </p>
         <div class="hero-actions">
             {% if league %}
-                <a class="primary-button" href="{% url 'signup' %}?league={{ league.slug }}">
-                    {% if league.landing_cta %}{{ league.landing_cta }}{% else %}Join {{ league.name }}{% endif %}
-                </a>
-                <a class="secondary-button" href="{% url 'login' %}?league={{ league.slug }}">Player login</a>
+                {% if user.is_authenticated %}
+                    {% if is_league_member %}
+                        <a class="primary-button" href="{{ league.get_absolute_url }}">Open league</a>
+                    {% else %}
+                        <form method="post" action="{% url 'join_public_league' league.slug %}">
+                            {% csrf_token %}
+                            <button class="primary-button" type="submit">
+                                {% if league.landing_cta %}{{ league.landing_cta }}{% else %}Join {{ league.name }}{% endif %}
+                            </button>
+                        </form>
+                    {% endif %}
+                {% else %}
+                    <a class="primary-button" href="{% url 'signup' %}?league={{ league.slug }}">
+                        {% if league.landing_cta %}{{ league.landing_cta }}{% else %}Join {{ league.name }}{% endif %}
+                    </a>
+                    <a class="secondary-button" href="{% url 'login' %}?league={{ league.slug }}">Player login</a>
+                {% endif %}
             {% else %}
                 <a class="primary-button" href="#available-leagues">Choose a league</a>
                 <a class="secondary-button" href="{% url 'login' %}">Player login</a>

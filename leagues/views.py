@@ -122,11 +122,9 @@ def home(request):
         if request.user.is_staff or request.user.is_superuser:
             return redirect('dashboard')
         if target_league is not None:
-            LeagueMembership.objects.get_or_create(
-                league=target_league,
-                user=request.user,
-            )
-            return redirect(target_league)
+            if LeagueMembership.objects.filter(league=target_league, user=request.user).exists():
+                return redirect(target_league)
+            return render_public_league_landing(request, target_league)
         return redirect('dashboard')
 
     if target_league is not None:
@@ -152,12 +150,38 @@ def public_league_landing(request, slug):
     if request.user.is_authenticated:
         if request.user.is_staff or request.user.is_superuser:
             return redirect('dashboard')
-        LeagueMembership.objects.get_or_create(league=league, user=request.user)
-        return redirect(league)
+        if LeagueMembership.objects.filter(league=league, user=request.user).exists():
+            return redirect(league)
 
+    return render_public_league_landing(request, league)
+
+
+def render_public_league_landing(request, league):
+    is_league_member = (
+        request.user.is_authenticated
+        and not is_organiser(request.user)
+        and LeagueMembership.objects.filter(league=league, user=request.user).exists()
+    )
     return render(request, 'leagues/home.html', {
         'league': league,
+        'is_league_member': is_league_member,
     })
+
+
+@login_required
+def join_public_league(request, slug):
+    if is_organiser(request.user):
+        messages.error(request, 'Organiser accounts cannot join prediction leagues. Use a separate player account to play.')
+        return redirect('dashboard')
+
+    if request.method != 'POST':
+        return redirect('public_league_landing', slug=slug)
+
+    league = get_object_or_404(PrivateLeague, slug=slug)
+    LeagueMembership.objects.get_or_create(league=league, user=request.user)
+    request.session.pop(TARGET_LEAGUE_SESSION_KEY, None)
+    messages.success(request, f'Joined {league.name}.')
+    return redirect(league)
 
 
 def signup(request):

@@ -116,7 +116,10 @@
                     </div>
                 </section>
             {% empty %}
-                <p class="helper-text">No matches are available for this mode yet.</p>
+                <div class="empty-state">
+                    <strong>Fixtures are being prepared</strong>
+                    <span>Check back soon for the next matches.</span>
+                </div>
             {% endfor %}
         </div>
     </div>
@@ -141,7 +144,10 @@
                     <strong class="leaderboard-points">{{ row.total_points }}</strong>
                 </div>
             {% empty %}
-                <p class="helper-text">No players yet.</p>
+                <div class="empty-state">
+                    <strong>Leaderboard starts after first result</strong>
+                    <span>Players will appear here once predictions have points.</span>
+                </div>
             {% endfor %}
         </div>
     </div>

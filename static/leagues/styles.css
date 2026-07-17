@@ -177,6 +177,10 @@ main {
     margin-top: 22px;
 }
 
+.hero-actions form {
+    margin: 0;
+}
+
 .page-heading {
     margin: 0 0 16px;
 }
@@ -524,6 +528,25 @@ textarea {
 .helper-text {
     color: var(--muted);
     line-height: 1.45;
+}
+
+.empty-state {
+    display: grid;
+    gap: 6px;
+    border: 1px dashed #cbd5e1;
+    border-radius: var(--radius);
+    background: #f8fafc;
+    padding: 18px;
+    color: var(--muted);
+}
+
+.empty-state strong {
+    color: var(--text);
+    font-size: 17px;
+}
+
+.empty-state span {
+    line-height: 1.4;
 }
 
 .auth-links {
