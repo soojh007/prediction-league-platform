@@ -1,13 +1,14 @@
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
-from .models import Competition, LeagueMembership, PrivateLeague
+from .models import Competition, LeagueMembership, Match, PrivateLeague, Team
 
 
 class LeagueJoinFlowTests(TestCase):
     def setUp(self):
-        self.owner = User.objects.create_user(username='owner', password='password123')
+        self.owner = User.objects.create_user(username='owner', password='password123', is_staff=True)
         self.player = User.objects.create_user(username='player', password='password123')
 
         self.epl = self.create_league('2026-27 EPL Prediction League', 'epl2627', 'Premier League')
@@ -41,3 +42,49 @@ class LeagueJoinFlowTests(TestCase):
         self.assertRedirects(response, self.spl.get_absolute_url())
         self.assertEqual(LeagueMembership.objects.filter(user=self.player).count(), 2)
         self.assertTrue(LeagueMembership.objects.filter(league=self.spl, user=self.player).exists())
+
+    def test_rules_page_is_public(self):
+        response = self.client.get(reverse('league_rules', args=[self.epl.slug]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '7 points per match')
+        self.assertContains(response, self.epl.name)
+
+    def test_rules_page_links_back_to_joined_league(self):
+        LeagueMembership.objects.create(league=self.epl, user=self.player)
+        self.client.force_login(self.player)
+
+        response = self.client.get(reverse('league_rules', args=[self.epl.slug]))
+
+        self.assertContains(response, 'Back to league')
+
+    def test_organiser_dashboard_counts_league_setup(self):
+        home = Team.objects.create(competition=self.epl.competition, name='Arsenal')
+        away = Team.objects.create(competition=self.epl.competition, name='Chelsea')
+        Match.objects.create(
+            competition=self.epl.competition,
+            home_team=home,
+            away_team=away,
+            kickoff_time=timezone.now(),
+            status=Match.Status.UPCOMING,
+        )
+        Match.objects.create(
+            competition=self.epl.competition,
+            home_team=away,
+            away_team=home,
+            kickoff_time=timezone.now(),
+            status=Match.Status.FINISHED,
+            home_score=1,
+            away_score=0,
+        )
+        LeagueMembership.objects.create(league=self.epl, user=self.player)
+
+        self.client.force_login(self.owner)
+        response = self.client.get(reverse('organiser_leagues'))
+
+        league = next(item for item in response.context['leagues'] if item.pk == self.epl.pk)
+        self.assertEqual(league.player_count, 1)
+        self.assertEqual(league.team_count, 2)
+        self.assertEqual(league.match_count, 2)
+        self.assertEqual(league.upcoming_match_count, 1)
+        self.assertEqual(league.finished_match_count, 1)

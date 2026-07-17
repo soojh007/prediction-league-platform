@@ -11,6 +11,9 @@
         </div>
         <h1>{{ league.name }}</h1>
         <p>{{ league.get_prediction_mode_display }}</p>
+        <div class="hero-actions">
+            <a class="secondary-button" href="{% url 'league_rules' league.slug %}">Scoring rules</a>
+        </div>
     </div>
 </section>
 

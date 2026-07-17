@@ -549,6 +549,51 @@ textarea {
     line-height: 1.4;
 }
 
+.rules-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.rules-highlight {
+    border-left: 4px solid var(--primary);
+}
+
+.rules-table,
+.rules-examples {
+    display: grid;
+    gap: 10px;
+}
+
+.rules-row,
+.rules-example {
+    display: grid;
+    grid-template-columns: minmax(160px, 0.8fr) minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #f8fafc;
+    padding: 12px;
+}
+
+.rules-row span,
+.rules-example span {
+    color: var(--muted);
+}
+
+.rules-row b,
+.rules-example b {
+    color: var(--primary);
+    white-space: nowrap;
+}
+
+.rules-example.exact {
+    border-color: rgba(30, 137, 83, 0.35);
+    background: rgba(30, 137, 83, 0.08);
+}
+
 .auth-links {
     display: grid;
     gap: 8px;
@@ -663,6 +708,73 @@ textarea {
 
 .organiser-card {
     grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.organiser-dashboard-list {
+    display: grid;
+    gap: 14px;
+}
+
+.organiser-league-card {
+    display: grid;
+    grid-template-columns: minmax(260px, 1.2fr) minmax(320px, 1fr) auto;
+    gap: 16px;
+    align-items: center;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: #f8fafc;
+    padding: 16px;
+}
+
+.organiser-league-main {
+    display: grid;
+    min-width: 0;
+    gap: 7px;
+}
+
+.organiser-league-main .league-card-title {
+    display: flex;
+}
+
+.organiser-league-main .league-card-title > div {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+}
+
+.organiser-league-main strong {
+    line-height: 1.25;
+}
+
+.organiser-league-main span {
+    color: var(--muted);
+}
+
+.organiser-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(72px, 1fr));
+    gap: 8px;
+}
+
+.organiser-stat {
+    display: grid;
+    gap: 3px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+    padding: 9px 10px;
+}
+
+.organiser-stat span {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.organiser-stat strong {
+    color: var(--ink);
+    font-size: 20px;
+    line-height: 1;
 }
 
 .organiser-actions,
@@ -1134,6 +1246,7 @@ textarea {
     .profile-grid,
     .profile-form,
     .content-grid,
+    .rules-grid,
     .organiser-settings-grid,
     .prediction-form,
     .intro-panel,
@@ -1205,6 +1318,14 @@ textarea {
         grid-template-columns: 1fr;
     }
 
+    .organiser-league-card {
+        grid-template-columns: 1fr;
+    }
+
+    .organiser-stat-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
     .admin-match-meta {
         justify-items: start;
         text-align: left;
@@ -1234,6 +1355,17 @@ textarea {
 
     .score-summary strong {
         font-size: 15px;
+    }
+
+    .rules-row,
+    .rules-example {
+        grid-template-columns: 1fr auto;
+    }
+
+    .rules-row span,
+    .rules-example span {
+        grid-column: 1 / -1;
+        order: 3;
     }
 }
 
@@ -1271,9 +1403,14 @@ textarea {
     .league-card,
     .profile-league-card,
     .organiser-card,
+    .organiser-league-card,
     .admin-match-row,
     .member-row {
         grid-template-columns: 1fr;
+    }
+
+    .organiser-stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .league-status-grid {

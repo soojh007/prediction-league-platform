@@ -156,6 +156,22 @@ def public_league_landing(request, slug):
     return render_public_league_landing(request, league)
 
 
+def league_rules(request, slug):
+    league = get_object_or_404(
+        PrivateLeague.objects.select_related('competition'),
+        slug=slug,
+    )
+    is_league_member = (
+        request.user.is_authenticated
+        and not is_organiser(request.user)
+        and LeagueMembership.objects.filter(league=league, user=request.user).exists()
+    )
+    return render(request, 'leagues/rules.html', {
+        'league': league,
+        'is_league_member': is_league_member,
+    })
+
+
 def render_public_league_landing(request, league):
     is_league_member = (
         request.user.is_authenticated
@@ -298,7 +314,21 @@ def organiser_leagues(request):
         PrivateLeague.objects
         .filter(owner=request.user)
         .select_related('competition')
-        .prefetch_related('memberships')
+        .annotate(
+            player_count=models.Count('memberships', distinct=True),
+            team_count=models.Count('competition__teams', distinct=True),
+            match_count=models.Count('competition__matches', distinct=True),
+            upcoming_match_count=models.Count(
+                'competition__matches',
+                filter=models.Q(competition__matches__status=Match.Status.UPCOMING),
+                distinct=True,
+            ),
+            finished_match_count=models.Count(
+                'competition__matches',
+                filter=models.Q(competition__matches__status=Match.Status.FINISHED),
+                distinct=True,
+            ),
+        )
         .order_by('competition__name', 'name')
     )
 

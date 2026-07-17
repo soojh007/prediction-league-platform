@@ -53,6 +53,7 @@
                     </a>
                     <a class="secondary-button" href="{% url 'login' %}?league={{ league.slug }}">Player login</a>
                 {% endif %}
+                <a class="secondary-button" href="{% url 'league_rules' league.slug %}">Scoring rules</a>
             {% else %}
                 <a class="primary-button" href="#available-leagues">Choose a league</a>
                 <a class="secondary-button" href="{% url 'login' %}">Player login</a>

@@ -19,23 +19,67 @@
         </div>
     </div>
 
-    <div class="league-list">
+    <div class="organiser-dashboard-list">
         {% for league in leagues %}
-            <div class="league-card organiser-card">
-                <div>
-                    <strong>{{ league.name }}</strong>
-                    <span>{{ league.competition.name }} · {{ league.get_prediction_mode_display }}</span>
-                    <span class="helper-text">Public page: /play/{{ league.slug }}/ · Join code {{ league.join_code }}</span>
+            <div class="organiser-league-card">
+                <div class="organiser-league-main">
+                    <div class="league-card-title">
+                        {% if league.competition.logo_url %}
+                            <img class="competition-logo" src="{{ league.competition.logo_url }}" alt="">
+                        {% endif %}
+                        <div>
+                            <strong>{{ league.name }}</strong>
+                            <span>{{ league.competition.name }} · {{ league.get_prediction_mode_display }}</span>
+                        </div>
+                    </div>
+                    <span class="helper-text">Public page: /play/{{ league.slug }}/</span>
+                    {% if league.competition.last_fixture_sync_at %}
+                        <span class="helper-text">
+                            Last API sync: {{ league.competition.last_fixture_sync_at|date:"d M, g:i a" }}
+                            {% if league.competition.last_fixture_sync_summary %}
+                                · {{ league.competition.last_fixture_sync_summary }}
+                            {% endif %}
+                        </span>
+                    {% else %}
+                        <span class="helper-text">Fixtures have not been synced yet.</span>
+                    {% endif %}
                 </div>
+
+                <div class="organiser-stat-grid">
+                    <div class="organiser-stat">
+                        <span>Players</span>
+                        <strong>{{ league.player_count }}</strong>
+                    </div>
+                    <div class="organiser-stat">
+                        <span>Teams</span>
+                        <strong>{{ league.team_count }}</strong>
+                    </div>
+                    <div class="organiser-stat">
+                        <span>Matches</span>
+                        <strong>{{ league.match_count }}</strong>
+                    </div>
+                    <div class="organiser-stat">
+                        <span>Upcoming</span>
+                        <strong>{{ league.upcoming_match_count }}</strong>
+                    </div>
+                    <div class="organiser-stat">
+                        <span>Finished</span>
+                        <strong>{{ league.finished_match_count }}</strong>
+                    </div>
+                </div>
+
                 <div class="organiser-actions">
-                    <span class="pill">{{ league.memberships.count }} players</span>
-                    <a class="predict-button" href="{% url 'public_league_landing' league.slug %}">Preview</a>
-                    <a class="predict-button" href="{% url 'organiser_matches' league.pk %}">Matches</a>
-                    <a class="primary-button" href="{% url 'organiser_league_settings' league.pk %}">Settings</a>
+                    <a class="primary-button" href="{% url 'organiser_matches' league.pk %}">Matches</a>
+                    <a class="predict-button" href="{% url 'organiser_teams' league.pk %}">Teams</a>
+                    <a class="secondary-button" href="{% url 'organiser_league_settings' league.pk %}">Settings</a>
+                    <a class="secondary-button" href="{% url 'public_league_landing' league.slug %}">Preview</a>
                 </div>
             </div>
         {% empty %}
-            <p class="helper-text">No leagues yet. Create one to start testing.</p>
+            <div class="empty-state">
+                <strong>No leagues yet</strong>
+                <span>Create your first prediction league, then add teams and fixtures from here.</span>
+            </div>
         {% endfor %}
     </div>
 </section>

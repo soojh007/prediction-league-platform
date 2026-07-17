@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Scoring rules - {{ league.name }}{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Scoring rules</p>
+        <h1>{{ league.name }}</h1>
+        <p class="helper-text">{{ league.competition.name }} · {{ league.get_prediction_mode_display }}</p>
+    </div>
+    {% if is_league_member %}
+        <a class="secondary-button" href="{{ league.get_absolute_url }}">Back to league</a>
+    {% else %}
+        <a class="secondary-button" href="{% url 'public_league_landing' league.slug %}">Back</a>
+    {% endif %}
+</section>
+
+<section class="rules-grid">
+    <div class="panel rules-highlight">
+        <p class="eyebrow">Maximum score</p>
+        <h2>7 points per match</h2>
+        <p class="helper-text">
+            Predict the full-time score before kickoff. Once a match starts, that prediction is locked.
+        </p>
+    </div>
+
+    <div class="panel">
+        <p class="eyebrow">League format</p>
+        {% if league.prediction_mode == 'SUPPORTER' %}
+            <h2>Predict your supported club</h2>
+            <p class="helper-text">
+                Choose one club, then predict only matches involving that club. Your club is locked after your first prediction.
+            </p>
+        {% elif league.prediction_mode == 'ALL' %}
+            <h2>Predict every fixture</h2>
+            <p class="helper-text">
+                Everyone predicts the same match list, so the leaderboard is a direct comparison across the season.
+            </p>
+        {% else %}
+            <h2>Predict featured matches</h2>
+            <p class="helper-text">
+                The organiser selects the matches that count for this league.
+            </p>
+        {% endif %}
+    </div>
+</section>
+
+<section class="panel">
+    <div class="section-heading compact">
+        <div>
+            <p class="eyebrow">Points breakdown</p>
+            <h2>How each prediction is scored</h2>
+        </div>
+    </div>
+
+    <div class="rules-table">
+        <div class="rules-row">
+            <strong>Exact score</strong>
+            <span>Correct home score and correct away score</span>
+            <b>7 pts</b>
+        </div>
+        <div class="rules-row">
+            <strong>Correct result</strong>
+            <span>Correct winner, or correctly predicted draw</span>
+            <b>3 pts</b>
+        </div>
+        <div class="rules-row">
+            <strong>Correct goal difference</strong>
+            <span>Same margin as the actual result</span>
+            <b>+1</b>
+        </div>
+        <div class="rules-row">
+            <strong>Correct home goals</strong>
+            <span>Home team score matches exactly</span>
+            <b>+1</b>
+        </div>
+        <div class="rules-row">
+            <strong>Correct away goals</strong>
+            <span>Away team score matches exactly</span>
+            <b>+1</b>
+        </div>
+    </div>
+</section>
+
+<section class="panel">
+    <div class="section-heading compact">
+        <div>
+            <p class="eyebrow">Examples</p>
+            <h2>If the actual result is Arsenal 2 - 1 Chelsea</h2>
+        </div>
+    </div>
+
+    <div class="rules-examples">
+        <div class="rules-example exact">
+            <strong>Arsenal 2 - 1 Chelsea</strong>
+            <span>Exact score</span>
+            <b>7 pts</b>
+        </div>
+        <div class="rules-example">
+            <strong>Arsenal 3 - 2 Chelsea</strong>
+            <span>Correct result and goal difference</span>
+            <b>4 pts</b>
+        </div>
+        <div class="rules-example">
+            <strong>Arsenal 2 - 0 Chelsea</strong>
+            <span>Correct result and Arsenal goals</span>
+            <b>4 pts</b>
+        </div>
+        <div class="rules-example">
+            <strong>Arsenal 1 - 0 Chelsea</strong>
+            <span>Correct result and goal difference</span>
+            <b>4 pts</b>
+        </div>
+        <div class="rules-example">
+            <strong>Arsenal 2 - 2 Chelsea</strong>
+            <span>Correct Arsenal goals only</span>
+            <b>1 pt</b>
+        </div>
+        <div class="rules-example">
+            <strong>Arsenal 0 - 1 Chelsea</strong>
+            <span>No match</span>
+            <b>0 pts</b>
+        </div>
+    </div>
+</section>
+
+<section class="panel">
+    <p class="eyebrow">Leaderboard</p>
+    <h2>Ranking</h2>
+    {% if league.ranking_mode == 'AVERAGE' %}
+        <p class="helper-text">
+            Players are ranked by average points after meeting the minimum prediction count. Exact scores are used as a tiebreaker.
+        </p>
+    {% else %}
+        <p class="helper-text">
+            Players are ranked by total points. Exact scores are used as a tiebreaker.
+        </p>
+    {% endif %}
+</section>
+{% endblock %}
