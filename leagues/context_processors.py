@@ -1,12 +1,39 @@
-from .models import LeagueMembership
+from .models import LeagueMembership, PrivateLeague
+
+
+HOST_LEAGUE_SLUGS = {
+    'epl2627': 'epl2627',
+    'spl2627': 'spl2627',
+}
+
+
+def get_host_league(request):
+    host = request.get_host().split(':', 1)[0].lower()
+    host_prefix = host.split('.', 1)[0]
+    league_slug = HOST_LEAGUE_SLUGS.get(host_prefix)
+    if not league_slug:
+        return None
+
+    return (
+        PrivateLeague.objects
+        .select_related('competition')
+        .filter(slug=league_slug)
+        .first()
+    )
 
 
 def player_navigation(request):
+    host_league = get_host_league(request)
+
     if not request.user.is_authenticated:
-        return {}
+        return {
+            'nav_host_league': host_league,
+        }
 
     if request.user.is_staff or request.user.is_superuser:
-        return {}
+        return {
+            'nav_host_league': host_league,
+        }
 
     memberships = (
         LeagueMembership.objects
@@ -19,4 +46,5 @@ def player_navigation(request):
     return {
         'nav_primary_league': membership.league if membership else None,
         'nav_league_count': memberships.count(),
+        'nav_host_league': host_league,
     }

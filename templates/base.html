@@ -30,7 +30,11 @@
                 </form>
             {% else %}
                 <a href="{% url 'login' %}">Login</a>
-                <a class="nav-cta" href="{% url 'signup' %}">Join league</a>
+                {% if nav_host_league %}
+                    <a class="nav-cta" href="{% url 'signup' %}?league={{ nav_host_league.slug }}">Join league</a>
+                {% else %}
+                    <a class="nav-cta" href="{% url 'home' %}#available-leagues">Join league</a>
+                {% endif %}
             {% endif %}
         </div>
     </nav>
