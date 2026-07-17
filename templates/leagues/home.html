@@ -3,7 +3,7 @@
 {% block title %}{% if league %}{{ league.name }}{% else %}Prediction League Platform{% endif %}{% endblock %}
 
 {% block content %}
-<section class="hero{% if not league or league.competition.name == 'Premier League' %} hero-premier-league{% endif %}">
+<section class="hero{% if not league %} hero-platform{% elif league.competition.name == 'Premier League' %} hero-premier-league{% elif league.competition.name == 'Singapore Premier League' %} hero-singapore-premier-league{% endif %}">
     <div>
         <p class="eyebrow">
             {% if league %}

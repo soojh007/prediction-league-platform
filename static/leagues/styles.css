@@ -108,10 +108,22 @@ main {
     margin-bottom: 16px;
 }
 
+.hero-platform {
+    background:
+        linear-gradient(90deg, rgba(7, 10, 16, 0.82), rgba(7, 10, 16, 0.28)),
+        url("/static/leagues/gen-stadium.webp") center / cover;
+}
+
 .hero-premier-league {
     background:
         linear-gradient(90deg, rgba(7, 10, 16, 0.82), rgba(7, 10, 16, 0.30)),
         url("/static/leagues/pl-stadium.png") center / cover;
+}
+
+.hero-singapore-premier-league {
+    background:
+        linear-gradient(90deg, rgba(7, 10, 16, 0.78), rgba(7, 10, 16, 0.22)),
+        url("/static/leagues/spl-stadium.png") center / cover;
 }
 
 .hero h1,

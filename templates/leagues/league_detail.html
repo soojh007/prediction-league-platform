@@ -3,7 +3,7 @@
 {% block title %}{{ league.name }}{% endblock %}
 
 {% block content %}
-<section class="league-hero{% if league.competition.name == 'Premier League' %} hero-premier-league{% endif %}">
+<section class="league-hero{% if league.competition.name == 'Premier League' %} hero-premier-league{% elif league.competition.name == 'Singapore Premier League' %} hero-singapore-premier-league{% endif %}">
     <div>
         <div class="hero-league-title">
             {% include "leagues/partials/competition_logo.html" with competition=league.competition %}
