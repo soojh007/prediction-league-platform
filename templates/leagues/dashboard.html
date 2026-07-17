@@ -196,9 +196,11 @@
 
 <section class="{% if can_create_league %}dashboard-grid{% else %}player-dashboard-grid{% endif %}">
     {% if not can_create_league %}
-        <div class="panel">
-            <p class="eyebrow">Join a league</p>
-            <h2>Enter invite code</h2>
+        <div class="panel join-code-panel">
+            <div>
+                <p class="eyebrow">Have an invite code?</p>
+                <p class="helper-text">Use this only for private leagues that are not listed above.</p>
+            </div>
             <form method="post" action="{% url 'join_league' %}" class="inline-form">
                 {% csrf_token %}
                 {{ join_form.join_code }}

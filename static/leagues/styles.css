@@ -280,6 +280,16 @@ h2 {
     grid-template-columns: minmax(0, 720px);
 }
 
+.join-code-panel {
+    display: grid;
+    gap: 12px;
+    background: #f8fafc;
+}
+
+.join-code-panel .helper-text {
+    margin: 2px 0 0;
+}
+
 .profile-grid {
     display: grid;
     grid-template-columns: minmax(260px, 1.35fr) repeat(3, minmax(150px, 0.55fr));

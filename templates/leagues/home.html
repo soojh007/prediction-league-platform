@@ -16,16 +16,22 @@
             {% if league and league.landing_headline %}
                 {{ league.landing_headline }}
             {% else %}
-                Run sharper football prediction leagues.
+                Pick your league. Predict the matches. Climb the table.
             {% endif %}
         </h1>
         <p>
             {% if league and league.landing_intro %}
                 {{ league.landing_intro }}
             {% elif league %}
-                Join {{ league.name }} where you only need to predict the team you support. Simple enough for casual fans, competitive enough for bragging rights.
+                {% if league.prediction_mode == 'SUPPORTER' %}
+                    Join {{ league.name }} where you only predict the club you support. Simple enough for casual fans, competitive enough for bragging rights.
+                {% elif league.prediction_mode == 'ALL' %}
+                    Join {{ league.name }} where every fixture counts. Predict the full match list and climb a straight-up leaderboard.
+                {% else %}
+                    Join {{ league.name }} and make predictions on the featured matches selected for your group.
+                {% endif %}
             {% else %}
-                Choose the league you want to play in, predict the matches that matter, and compete with friends on a clean mobile-first leaderboard.
+                Choose the competition you want to play in and compete with friends on a clean mobile-first leaderboard.
             {% endif %}
         </p>
         <div class="hero-actions">
@@ -68,6 +74,10 @@
         <h2>
             {% if league and league.landing_how_title %}
                 {{ league.landing_how_title }}
+            {% elif league and league.prediction_mode == 'ALL' %}
+                Every matchday is the challenge.
+            {% elif league and league.prediction_mode == 'SUPPORTER' %}
+                Pick one club and follow their season.
             {% else %}
                 Flexible modes for different fan groups.
             {% endif %}
@@ -76,6 +86,10 @@
     <p>
         {% if league and league.landing_how_body %}
             {{ league.landing_how_body }}
+        {% elif league and league.prediction_mode == 'ALL' %}
+            Everyone predicts the same fixtures, so the leaderboard is direct and easy to compare. It is the best format for compact leagues, office pools, and groups who want the full-season test.
+        {% elif league and league.prediction_mode == 'SUPPORTER' %}
+            Instead of asking every player to predict every match, this mode keeps it light: choose your supported club, predict their fixtures, and compete on the same scoring rules.
         {% else %}
             Some leagues ask players to back one club for the season. Others ask everyone to predict every fixture. Each league can use the format that feels fairest for its players.
         {% endif %}
@@ -86,20 +100,58 @@
     <div class="panel">
         <p class="feature-icon">1</p>
         <p class="eyebrow">Step 1</p>
-        <h2>{% if league and league.prediction_mode == 'SUPPORTER' %}Choose your club{% else %}Join a league{% endif %}</h2>
-        <p>{% if league and league.prediction_mode == 'SUPPORTER' %}Start with the team you support, then your match list stays focused on that club.{% else %}Enter the league built for your group, competition, or club community.{% endif %}</p>
+        <h2>
+            {% if league and league.prediction_mode == 'SUPPORTER' %}
+                Choose your club
+            {% elif league and league.prediction_mode == 'ALL' %}
+                Join the league
+            {% else %}
+                Choose a league
+            {% endif %}
+        </h2>
+        <p>
+            {% if league and league.prediction_mode == 'SUPPORTER' %}
+                Start with the team you support, then your match list stays focused on that club.
+            {% elif league and league.prediction_mode == 'ALL' %}
+                Sign up once and your fixtures are ready. No club choice needed.
+            {% else %}
+                Pick the competition and format that fits how your group wants to play.
+            {% endif %}
+        </p>
     </div>
     <div class="panel">
         <p class="feature-icon">2</p>
         <p class="eyebrow">Step 2</p>
-        <h2>Predict each match</h2>
-        <p>Submit scores before kickoff, edit while the match is still open, and watch the points land after results.</p>
+        <h2>
+            {% if league and league.prediction_mode == 'SUPPORTER' %}
+                Predict your club
+            {% elif league and league.prediction_mode == 'ALL' %}
+                Predict every fixture
+            {% else %}
+                Predict the matches
+            {% endif %}
+        </h2>
+        <p>
+            {% if league and league.prediction_mode == 'SUPPORTER' %}
+                Your list only shows matches involving your supported club, so the weekly task stays manageable.
+            {% elif league and league.prediction_mode == 'ALL' %}
+                Everyone gets the same match list, making every point a clean head-to-head comparison.
+            {% else %}
+                Submit scores before kickoff, edit while the match is still open, and watch the points land after results.
+            {% endif %}
+        </p>
     </div>
     <div class="panel">
         <p class="feature-icon">3</p>
         <p class="eyebrow">Step 3</p>
-        <h2>Beat your friends</h2>
-        <p>Compare totals, exact scores, and league positions throughout the season.</p>
+        <h2>Climb the table</h2>
+        <p>
+            {% if league and league.prediction_mode == 'ALL' %}
+                Track total points, exact scores, and form across the full fixture list.
+            {% else %}
+                Compare totals, exact scores, and league positions throughout the season.
+            {% endif %}
+        </p>
     </div>
 </section>
 
@@ -107,8 +159,10 @@
     <div>
         <p class="eyebrow">For organisers</p>
         <h2>Want to run a private prediction league?</h2>
-        <p>I’m opening organiser access carefully while the EPL supporter mode is tested first.</p>
+        <p>Tell me the competition, format, and group size you have in mind. I can help set up a league for your friends, office, club, or community.</p>
     </div>
-    <p class="organiser-note">Organiser access is invite-only for now.</p>
+    <a class="secondary-button" href="mailto:hello@predictionleague.site?subject=Prediction%20League%20organiser%20enquiry&body=Hi%2C%20I%20would%20like%20to%20run%20a%20prediction%20league.%0A%0ACompetition%3A%0AFormat%20%28supported%20club%20or%20all%20matches%29%3A%0AEstimated%20players%3A%0A">
+        Enquire by email
+    </a>
 </section>
 {% endblock %}
