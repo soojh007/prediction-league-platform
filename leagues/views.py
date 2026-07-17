@@ -116,7 +116,7 @@ def home(request):
             return redirect('organiser_leagues')
         return redirect('admin_login')
 
-    target_league = get_host_league(request) or get_default_league()
+    target_league = get_host_league(request)
 
     if request.user.is_authenticated:
         if request.user.is_staff or request.user.is_superuser:
@@ -131,7 +131,15 @@ def home(request):
 
     if target_league is not None:
         return public_league_landing(request, target_league.slug)
-    return render(request, 'leagues/home.html')
+
+    available_leagues = (
+        PrivateLeague.objects
+        .select_related('competition')
+        .order_by('competition__name', 'name')
+    )
+    return render(request, 'leagues/home.html', {
+        'available_leagues': available_leagues,
+    })
 
 
 def public_league_landing(request, slug):

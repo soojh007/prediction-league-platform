@@ -9,14 +9,14 @@
             {% if league %}
                 {{ league.name }}
             {% else %}
-                2026-27 EPL prediction league
+                Prediction League
             {% endif %}
         </p>
         <h1>
             {% if league and league.landing_headline %}
                 {{ league.landing_headline }}
             {% else %}
-                Back your club. Predict their matches. Climb the table.
+                Run sharper football prediction leagues.
             {% endif %}
         </h1>
         <p>
@@ -25,7 +25,7 @@
             {% elif league %}
                 Join {{ league.name }} where you only need to predict the team you support. Simple enough for casual fans, competitive enough for bragging rights.
             {% else %}
-                Join the 2026-27 EPL prediction league where you only need to predict the team you support. Simple enough for casual fans, competitive enough for bragging rights.
+                Choose the league you want to play in, predict the matches that matter, and compete with friends on a clean mobile-first leaderboard.
             {% endif %}
         </p>
         <div class="hero-actions">
@@ -35,12 +35,32 @@
                 </a>
                 <a class="secondary-button" href="{% url 'login' %}?league={{ league.slug }}">Player login</a>
             {% else %}
-                <a class="primary-button" href="{% url 'signup' %}">Join the 2026-27 EPL League</a>
+                <a class="primary-button" href="#available-leagues">Choose a league</a>
                 <a class="secondary-button" href="{% url 'login' %}">Player login</a>
             {% endif %}
         </div>
     </div>
 </section>
+
+{% if not league %}
+<section class="panel" id="available-leagues">
+    <p class="eyebrow">Available leagues</p>
+    <h2>Pick your competition</h2>
+    <div class="league-list">
+        {% for available_league in available_leagues %}
+            <a class="league-card" href="{% url 'public_league_landing' available_league.slug %}">
+                <div class="league-card-title">
+                    <strong>{{ available_league.name }}</strong>
+                    <span>{{ available_league.competition.name }} · {{ available_league.get_prediction_mode_display }}</span>
+                </div>
+                <span>View league</span>
+            </a>
+        {% empty %}
+            <p class="helper-text">No public leagues are available yet.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
 
 <section class="intro-panel panel">
     <div>
@@ -49,7 +69,7 @@
             {% if league and league.landing_how_title %}
                 {{ league.landing_how_title }}
             {% else %}
-                Pick one club and follow their season.
+                Flexible modes for different fan groups.
             {% endif %}
         </h2>
     </div>
@@ -57,7 +77,7 @@
         {% if league and league.landing_how_body %}
             {{ league.landing_how_body }}
         {% else %}
-            Instead of asking every player to predict every match, this league keeps it fair and light: choose your supported club, predict their fixtures, and compete on a leaderboard built around the same scoring rules.
+            Some leagues ask players to back one club for the season. Others ask everyone to predict every fixture. Each league can use the format that feels fairest for its players.
         {% endif %}
     </p>
 </section>
@@ -66,8 +86,8 @@
     <div class="panel">
         <p class="feature-icon">1</p>
         <p class="eyebrow">Step 1</p>
-        <h2>Choose your club</h2>
-        <p>Start with the EPL team you support, then your match list stays focused on that club.</p>
+        <h2>{% if league and league.prediction_mode == 'SUPPORTER' %}Choose your club{% else %}Join a league{% endif %}</h2>
+        <p>{% if league and league.prediction_mode == 'SUPPORTER' %}Start with the team you support, then your match list stays focused on that club.{% else %}Enter the league built for your group, competition, or club community.{% endif %}</p>
     </div>
     <div class="panel">
         <p class="feature-icon">2</p>
