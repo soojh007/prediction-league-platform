@@ -973,6 +973,12 @@ def build_league_status(user, league, matches, predictions, leaderboard):
     matches = list(matches)
     total_matches = len(matches)
     predicted_count = len(predictions)
+    open_matches = sum(1 for match in matches if match.status != Match.Status.FINISHED)
+    finished_matches = max(total_matches - open_matches, 0)
+    unpredicted_open_matches = sum(
+        1 for match in matches
+        if match.status != Match.Status.FINISHED and match.id not in predictions
+    )
     completion_percent = round(predicted_count / total_matches * 100) if total_matches else 0
     next_prediction = next(
         (
@@ -997,6 +1003,9 @@ def build_league_status(user, league, matches, predictions, leaderboard):
         'points_behind': max(leader_points - total_points, 0),
         'predicted_count': predicted_count,
         'total_matches': total_matches,
+        'open_matches': open_matches,
+        'finished_matches': finished_matches,
+        'unpredicted_open_matches': unpredicted_open_matches,
         'completion_percent': completion_percent,
         'next_prediction': next_prediction,
     }

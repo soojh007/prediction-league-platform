@@ -619,6 +619,36 @@ textarea {
     margin-bottom: 16px;
 }
 
+.league-overview-strip {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin: -4px 0 16px;
+}
+
+.league-overview-strip > div {
+    display: grid;
+    gap: 3px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: #f8fafc;
+    padding: 11px 13px;
+}
+
+.league-overview-strip span {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 850;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.league-overview-strip strong {
+    color: var(--ink);
+    font-size: 24px;
+    line-height: 1;
+}
+
 .status-card {
     display: grid;
     align-content: start;
@@ -1263,6 +1293,10 @@ textarea {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
+    .league-overview-strip {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
     .accuracy-legend {
         width: 100%;
     }
@@ -1415,6 +1449,23 @@ textarea {
 
     .league-status-grid {
         gap: 10px;
+    }
+
+    .league-overview-strip {
+        gap: 8px;
+    }
+
+    .league-overview-strip > div {
+        padding: 10px;
+    }
+
+    .league-overview-strip span {
+        font-size: 11px;
+        line-height: 1.25;
+    }
+
+    .league-overview-strip strong {
+        font-size: 21px;
     }
 
     .status-card {

@@ -17,6 +17,21 @@
     </div>
 </section>
 
+<section class="league-overview-strip">
+    <div>
+        <span>Open matches</span>
+        <strong>{{ league_status.open_matches }}</strong>
+    </div>
+    <div>
+        <span>Settled matches</span>
+        <strong>{{ league_status.finished_matches }}</strong>
+    </div>
+    <div>
+        <span>To predict</span>
+        <strong>{{ league_status.unpredicted_open_matches }}</strong>
+    </div>
+</section>
+
 {% if league.prediction_mode == 'SUPPORTER' %}
     <section class="panel supporter-panel">
         <div>

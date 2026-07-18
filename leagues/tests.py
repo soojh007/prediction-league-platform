@@ -88,3 +88,36 @@ class LeagueJoinFlowTests(TestCase):
         self.assertEqual(league.match_count, 2)
         self.assertEqual(league.upcoming_match_count, 1)
         self.assertEqual(league.finished_match_count, 1)
+
+    def test_league_detail_shows_match_availability_overview(self):
+        self.epl.prediction_mode = PrivateLeague.PredictionMode.ALL
+        self.epl.save()
+        home = Team.objects.create(competition=self.epl.competition, name='Arsenal')
+        away = Team.objects.create(competition=self.epl.competition, name='Chelsea')
+        for days in (1, 2):
+            Match.objects.create(
+                competition=self.epl.competition,
+                home_team=home,
+                away_team=away,
+                kickoff_time=timezone.now() + timezone.timedelta(days=days),
+                status=Match.Status.UPCOMING,
+            )
+        Match.objects.create(
+            competition=self.epl.competition,
+            home_team=away,
+            away_team=home,
+            kickoff_time=timezone.now() - timezone.timedelta(days=1),
+            status=Match.Status.FINISHED,
+            home_score=1,
+            away_score=0,
+        )
+        LeagueMembership.objects.create(league=self.epl, user=self.player)
+
+        self.client.force_login(self.player)
+        response = self.client.get(self.epl.get_absolute_url())
+
+        self.assertContains(response, 'Open matches')
+        self.assertContains(response, 'Settled matches')
+        self.assertContains(response, 'To predict')
+        self.assertContains(response, '<strong>2</strong>', html=True)
+        self.assertContains(response, '<strong>1</strong>', html=True)
