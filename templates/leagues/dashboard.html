@@ -43,7 +43,11 @@
                     <span class="pill">Manage</span>
                 </a>
             {% empty %}
-                <p class="helper-text">Create your first league to start managing matches and results.</p>
+                <div class="empty-state">
+                    <strong>Create your first league</strong>
+                    <span>Set up the competition, add teams, then prepare fixtures for players.</span>
+                    <a class="secondary-button" href="{% url 'create_league' %}">Create league</a>
+                </div>
             {% endfor %}
         </div>
     </section>
@@ -80,7 +84,11 @@
                     {% endif %}
                 </a>
             {% empty %}
-                <p class="helper-text">You have not joined any leagues yet.</p>
+                <div class="empty-state">
+                    <strong>Choose a league to start</strong>
+                    <span>Your leagues will appear here after you join from a league landing page.</span>
+                    <a class="secondary-button" href="{% url 'home' %}#available-leagues">Browse leagues</a>
+                </div>
             {% endfor %}
         </div>
     </section>
@@ -96,46 +104,53 @@
             <span class="pill">{{ accuracy.total }} settled</span>
         </div>
 
-        <div class="accuracy-chart-card">
-            <div
-                class="accuracy-pie"
-                style="--exact-end: {{ accuracy.exact_percent }}%; --correct-end: {{ accuracy.exact_percent|add:accuracy.correct_percent }}%;"
-                aria-label="Prediction accuracy chart"
-            >
-                <div class="accuracy-pie-center">
-                    <strong>{{ accuracy.total }}</strong>
-                    <span>settled</span>
+        {% if accuracy.total %}
+            <div class="accuracy-chart-card">
+                <div
+                    class="accuracy-pie"
+                    style="--exact-end: {{ accuracy.exact_percent }}%; --correct-end: {{ accuracy.exact_percent|add:accuracy.correct_percent }}%;"
+                    aria-label="Prediction accuracy chart"
+                >
+                    <div class="accuracy-pie-center">
+                        <strong>{{ accuracy.total }}</strong>
+                        <span>settled</span>
+                    </div>
+
+                    {% if accuracy.exact_scores %}
+                        <span class="pie-label pie-label-exact">{{ accuracy.exact_scores }} exact</span>
+                    {% endif %}
+                    {% if accuracy.correct_results %}
+                        <span class="pie-label pie-label-correct">{{ accuracy.correct_results }} correct</span>
+                    {% endif %}
+                    {% if accuracy.other_predictions %}
+                        <span class="pie-label pie-label-other">{{ accuracy.other_predictions }} other</span>
+                    {% endif %}
                 </div>
 
-                {% if accuracy.exact_scores %}
-                    <span class="pie-label pie-label-exact">{{ accuracy.exact_scores }} exact</span>
-                {% endif %}
-                {% if accuracy.correct_results %}
-                    <span class="pie-label pie-label-correct">{{ accuracy.correct_results }} correct</span>
-                {% endif %}
-                {% if accuracy.other_predictions %}
-                    <span class="pie-label pie-label-other">{{ accuracy.other_predictions }} other</span>
-                {% endif %}
-            </div>
-
-            <div class="accuracy-legend">
-                <div class="accuracy-legend-item exact">
-                    <span></span>
-                    <strong>{{ accuracy.exact_scores }}</strong>
-                    <small>Exact scores · {{ accuracy.exact_percent }}%</small>
-                </div>
-                <div class="accuracy-legend-item result">
-                    <span></span>
-                    <strong>{{ accuracy.correct_results }}</strong>
-                    <small>Correct · {{ accuracy.correct_percent }}%</small>
-                </div>
-                <div class="accuracy-legend-item other">
-                    <span></span>
-                    <strong>{{ accuracy.other_predictions }}</strong>
-                    <small>Other predictions · {{ accuracy.other_percent }}%</small>
+                <div class="accuracy-legend">
+                    <div class="accuracy-legend-item exact">
+                        <span></span>
+                        <strong>{{ accuracy.exact_scores }}</strong>
+                        <small>Exact scores · {{ accuracy.exact_percent }}%</small>
+                    </div>
+                    <div class="accuracy-legend-item result">
+                        <span></span>
+                        <strong>{{ accuracy.correct_results }}</strong>
+                        <small>Correct · {{ accuracy.correct_percent }}%</small>
+                    </div>
+                    <div class="accuracy-legend-item other">
+                        <span></span>
+                        <strong>{{ accuracy.other_predictions }}</strong>
+                        <small>Other predictions · {{ accuracy.other_percent }}%</small>
+                    </div>
                 </div>
             </div>
-        </div>
+        {% else %}
+            <div class="empty-state">
+                <strong>Accuracy starts after first result</strong>
+                <span>Your exact scores and correct predictions will appear once a match is settled.</span>
+            </div>
+        {% endif %}
     </section>
 
     <section class="panel">

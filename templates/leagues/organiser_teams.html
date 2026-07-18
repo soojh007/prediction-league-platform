@@ -41,7 +41,11 @@
                 </div>
             </div>
         {% empty %}
-            <p class="helper-text">No teams have been added yet.</p>
+            <div class="empty-state">
+                <strong>No teams yet</strong>
+                <span>Add clubs before creating fixtures or importing a league schedule.</span>
+                <a class="secondary-button" href="{% url 'organiser_team_create' league.pk %}">Add first team</a>
+            </div>
         {% endfor %}
     </div>
 </section>

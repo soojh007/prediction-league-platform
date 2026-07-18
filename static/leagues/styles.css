@@ -987,7 +987,7 @@ textarea {
 }
 
 .organiser-actions,
-.member-row > div:last-child {
+.member-meta {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -1073,6 +1073,21 @@ textarea {
 
 .member-row {
     grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.member-main {
+    display: grid;
+    min-width: 0;
+    gap: 2px;
+}
+
+.member-main strong,
+.member-main span {
+    overflow-wrap: anywhere;
+}
+
+.member-meta .pill {
+    max-width: 180px;
 }
 
 .admin-match-list {
@@ -1766,11 +1781,27 @@ textarea {
     }
 
     .profile-league-actions,
-    .organiser-actions,
-    .member-row > div:last-child {
+    .organiser-actions {
         align-items: stretch;
         justify-content: flex-start;
         flex-direction: column;
+    }
+
+    .member-row {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+    }
+
+    .member-main {
+        width: 100%;
+    }
+
+    .member-meta {
+        justify-content: flex-start;
+    }
+
+    .member-meta .pill {
+        max-width: 100%;
     }
 
     .predict-button,

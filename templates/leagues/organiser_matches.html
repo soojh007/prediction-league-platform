@@ -60,7 +60,11 @@
                 </div>
             </div>
         {% empty %}
-            <p class="helper-text">No matches have been added to this competition yet.</p>
+            <div class="empty-state">
+                <strong>Fixtures are being prepared</strong>
+                <span>Add matches manually or sync fixtures from the API when you are ready.</span>
+                <a class="secondary-button" href="{% url 'organiser_match_create' league.pk %}">Add first match</a>
+            </div>
         {% endfor %}
     </div>
 </section>

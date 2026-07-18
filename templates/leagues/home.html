@@ -76,7 +76,10 @@
                 <span>View league</span>
             </a>
         {% empty %}
-            <p class="helper-text">No public leagues are available yet.</p>
+            <div class="empty-state">
+                <strong>Leagues are being prepared</strong>
+                <span>Public competitions will appear here when registration opens.</span>
+            </div>
         {% endfor %}
     </div>
 </section>

@@ -71,7 +71,7 @@
         <div class="leaderboard-list">
             {% for member in members %}
                 <div class="leaderboard-row member-row">
-                    <div>
+                    <div class="member-main">
                         <strong>
                             {% if member.user.first_name %}
                                 {{ member.user.first_name }}
@@ -81,7 +81,7 @@
                         </strong>
                         <span>{{ member.user.email|default:"No email" }}</span>
                     </div>
-                    <div>
+                    <div class="member-meta">
                         <span class="pill">{{ member.get_role_display }}</span>
                         {% if member.supported_team %}
                             <span class="pill">{{ member.supported_team.name }}</span>
