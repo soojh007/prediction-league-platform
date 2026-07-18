@@ -825,10 +825,10 @@ def predict(request, league_pk, match_pk):
         raise Http404('Match not available for this league mode.')
 
     prediction = Prediction.objects.filter(user=request.user, league=league, match=match).first()
-    is_locked = match.status == Match.Status.FINISHED
+    is_locked = is_match_locked(match)
     if request.method == 'POST':
         if is_locked:
-            messages.error(request, 'This match is finished, so predictions are locked.')
+            messages.error(request, 'This match has kicked off, so predictions are locked.')
             return redirect(league)
         form = PredictionForm(request.POST, instance=prediction)
         if form.is_valid():
@@ -842,12 +842,16 @@ def predict(request, league_pk, match_pk):
     else:
         form = PredictionForm(instance=prediction)
 
+    match.deadline_label = match_deadline_label(match)
+    match_info = build_match_info(league, match, request.user)
+
     return render(request, 'leagues/predict.html', {
         'league': league,
         'match': match,
         'form': form,
         'prediction': prediction,
         'is_locked': is_locked,
+        'match_info': match_info,
     })
 
 
@@ -881,6 +885,138 @@ def visible_matches_for(league, membership):
         )
 
     return matches.order_by('kickoff_time')
+
+
+def is_match_locked(match):
+    return match.status == Match.Status.FINISHED or match.kickoff_time <= timezone.now()
+
+
+def match_deadline_label(match):
+    if match.status == Match.Status.FINISHED:
+        return 'Finished'
+    if is_match_locked(match):
+        return 'Locked'
+
+    remaining = match.kickoff_time - timezone.now()
+    total_minutes = max(int(remaining.total_seconds() // 60), 0)
+    if total_minutes < 60:
+        return f'Locks in {total_minutes}m'
+
+    total_hours = total_minutes // 60
+    if total_hours < 24:
+        minutes = total_minutes % 60
+        if minutes:
+            return f'Locks in {total_hours}h {minutes}m'
+        return f'Locks in {total_hours}h'
+
+    days = total_hours // 24
+    return f'Locks in {days}d'
+
+
+def build_match_info(league, match, user):
+    prediction_summary = build_match_prediction_summary(league, match, user)
+    return {
+        'prediction_summary': prediction_summary,
+        'home_form': build_team_recent_form(match.competition, match.home_team, match.kickoff_time),
+        'away_form': build_team_recent_form(match.competition, match.away_team, match.kickoff_time),
+    }
+
+
+def build_match_prediction_summary(league, match, user):
+    predictions = list(
+        Prediction.objects
+        .filter(league=league, match=match)
+        .exclude(user=user)
+        .select_related('user')
+    )
+    total = len(predictions)
+    home_wins = sum(1 for prediction in predictions if prediction.predicted_home_score > prediction.predicted_away_score)
+    draws = sum(1 for prediction in predictions if prediction.predicted_home_score == prediction.predicted_away_score)
+    away_wins = max(total - home_wins - draws, 0)
+
+    score_counts = {}
+    for prediction in predictions:
+        score = f'{prediction.predicted_home_score} - {prediction.predicted_away_score}'
+        score_counts[score] = score_counts.get(score, 0) + 1
+
+    popular_scores = [
+        {
+            'score': score,
+            'count': count,
+            'percent': round(count / total * 100) if total else 0,
+        }
+        for score, count in sorted(score_counts.items(), key=lambda item: (-item[1], item[0]))[:3]
+    ]
+
+    def percent(value):
+        if not total:
+            return 0
+        return round(value / total * 100)
+
+    return {
+        'total': total,
+        'home_percent': percent(home_wins),
+        'draw_percent': percent(draws),
+        'away_percent': percent(away_wins),
+        'popular_scores': popular_scores,
+    }
+
+
+def build_team_recent_form(competition, team, before_time, limit=5):
+    matches = (
+        Match.objects
+        .filter(
+            competition=competition,
+            status=Match.Status.FINISHED,
+            kickoff_time__lt=before_time,
+            home_score__isnull=False,
+            away_score__isnull=False,
+        )
+        .filter(models.Q(home_team=team) | models.Q(away_team=team))
+        .select_related('home_team', 'away_team')
+        .order_by('-kickoff_time')[:limit]
+    )
+
+    rows = []
+    wins = draws = losses = goals_for = goals_against = 0
+    for completed_match in matches:
+        is_home = completed_match.home_team_id == team.id
+        team_score = completed_match.home_score if is_home else completed_match.away_score
+        opponent_score = completed_match.away_score if is_home else completed_match.home_score
+        opponent = completed_match.away_team if is_home else completed_match.home_team
+        goals_for += team_score
+        goals_against += opponent_score
+
+        if team_score > opponent_score:
+            result = 'W'
+            wins += 1
+        elif team_score == opponent_score:
+            result = 'D'
+            draws += 1
+        else:
+            result = 'L'
+            losses += 1
+
+        rows.append({
+            'match': completed_match,
+            'opponent': opponent,
+            'result': result,
+            'team_score': team_score,
+            'opponent_score': opponent_score,
+            'is_home': is_home,
+        })
+
+    total = len(rows)
+    return {
+        'team': team,
+        'rows': rows,
+        'total': total,
+        'record': f'{wins}W {draws}D {losses}L',
+        'goals_for': goals_for,
+        'goals_against': goals_against,
+        'goals_per_match': round(goals_for / total, 1) if total else 0,
+        'conceded_per_match': round(goals_against / total, 1) if total else 0,
+    }
 
 
 def build_prediction_history(user):
@@ -973,17 +1109,17 @@ def build_league_status(user, league, matches, predictions, leaderboard):
     matches = list(matches)
     total_matches = len(matches)
     predicted_count = len(predictions)
-    open_matches = sum(1 for match in matches if match.status != Match.Status.FINISHED)
+    open_matches = sum(1 for match in matches if not is_match_locked(match))
     finished_matches = max(total_matches - open_matches, 0)
     unpredicted_open_matches = sum(
         1 for match in matches
-        if match.status != Match.Status.FINISHED and match.id not in predictions
+        if not is_match_locked(match) and match.id not in predictions
     )
     completion_percent = round(predicted_count / total_matches * 100) if total_matches else 0
     next_prediction = next(
         (
             match for match in matches
-            if match.status != Match.Status.FINISHED and match.id not in predictions
+            if not is_match_locked(match) and match.id not in predictions
         ),
         None,
     )
@@ -1017,6 +1153,8 @@ def build_matchdays(matches):
     current_group = None
 
     for match in matches:
+        match.deadline_label = match_deadline_label(match)
+        match.is_locked = is_match_locked(match)
         match_date = timezone.localtime(match.kickoff_time).date()
         if match_date != current_date:
             current_date = match_date

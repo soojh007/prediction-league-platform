@@ -120,10 +120,15 @@
                                         {% include "leagues/partials/team_badge.html" with team=match.away_team %}
                                         {{ match.away_team.name }}
                                     </strong>
-                                    <span class="match-meta">{{ match.kickoff_time|date:"g:i a" }}{% if match.featured %} · Featured{% endif %}</span>
+                                    <span class="match-meta">
+                                        {{ match.kickoff_time|date:"g:i a" }}{% if match.featured %} · Featured{% endif %}
+                                    </span>
+                                    <span class="deadline-pill{% if match.is_locked %} locked{% endif %}">
+                                        {{ match.deadline_label }}
+                                    </span>
                                 </div>
-                                {% if match.status == 'FINISHED' %}
-                                    <span class="disabled-button">Finished</span>
+                                {% if match.is_locked %}
+                                    <span class="disabled-button">{{ match.deadline_label }}</span>
                                 {% else %}
                                     <a class="predict-button" href="{% url 'predict' league.pk match.pk %}">
                                         {% if match.id in predictions %}Edit{% else %}Predict{% endif %}

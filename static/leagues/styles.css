@@ -353,6 +353,162 @@ h2 {
     margin: 0 auto;
 }
 
+.predict-layout {
+    display: grid;
+    grid-template-columns: minmax(300px, 0.85fr) minmax(0, 1.15fr);
+    gap: 16px;
+    align-items: start;
+}
+
+.predict-layout .form-panel {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+}
+
+.match-info-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 8px 0 10px;
+    color: var(--muted);
+    font-weight: 700;
+}
+
+.match-insight-stack {
+    display: grid;
+    gap: 16px;
+}
+
+.sentiment-bars {
+    display: grid;
+    gap: 11px;
+    margin-top: 14px;
+}
+
+.sentiment-bars > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 5px 10px;
+    align-items: center;
+}
+
+.sentiment-bars span {
+    color: var(--muted);
+    font-weight: 800;
+}
+
+.sentiment-bars strong {
+    color: var(--ink);
+}
+
+.sentiment-bars i {
+    grid-column: 1 / -1;
+    height: 7px;
+    overflow: hidden;
+    border-radius: 999px;
+    background:
+        linear-gradient(90deg, var(--primary) 0 var(--bar), #e6ebf2 var(--bar) 100%);
+}
+
+.compact-score-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-top: 14px;
+}
+
+.compact-score-list > span {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 850;
+}
+
+.compact-score-list strong {
+    border-radius: 999px;
+    background: #edf3ff;
+    color: var(--ink);
+    padding: 6px 9px;
+}
+
+.compact-score-list small {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.empty-state.compact {
+    margin-top: 12px;
+    padding: 14px;
+}
+
+.team-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.team-form-card {
+    display: grid;
+    align-content: start;
+    gap: 8px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: #f8fafc;
+    padding: 12px;
+}
+
+.team-form-card h3 {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 16px;
+}
+
+.team-form-card p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.35;
+}
+
+.form-result-list {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 7px 8px;
+    align-items: center;
+    font-size: 13px;
+}
+
+.form-result-list span:not(.form-result) {
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.form-result {
+    display: grid;
+    width: 23px;
+    height: 23px;
+    place-items: center;
+    border-radius: 6px;
+    background: #667085;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.form-result.w {
+    background: var(--green);
+}
+
+.form-result.l {
+    background: #d92d20;
+}
+
 .auth-card {
     max-width: 480px;
 }
@@ -848,6 +1004,24 @@ textarea {
     line-height: 1.35;
 }
 
+.deadline-pill {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    border-radius: 999px;
+    background: #e8f0ff;
+    color: var(--primary);
+    font-size: 12px;
+    font-weight: 850;
+    line-height: 1;
+    padding: 6px 9px;
+}
+
+.deadline-pill.locked {
+    background: #edf1f6;
+    color: #667085;
+}
+
 .leaderboard-main {
     display: grid;
     gap: 3px;
@@ -1275,6 +1449,7 @@ textarea {
     .player-dashboard-grid,
     .profile-grid,
     .profile-form,
+    .predict-layout,
     .content-grid,
     .rules-grid,
     .organiser-settings-grid,
@@ -1287,6 +1462,10 @@ textarea {
     .accuracy-chart-card {
         grid-template-columns: 1fr;
         justify-items: center;
+    }
+
+    .team-form-grid {
+        grid-template-columns: 1fr;
     }
 
     .league-status-grid {
@@ -1484,6 +1663,15 @@ textarea {
         font-size: 16px;
     }
 
+    .match-info-line {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .sentiment-bars {
+        gap: 9px;
+    }
+
     .prediction-match > span {
         font-size: 13px;
     }
@@ -1519,6 +1707,10 @@ textarea {
     .match-meta {
         padding-left: 34px;
         font-size: 14px;
+    }
+
+    .deadline-pill {
+        margin-left: 34px;
     }
 
     .leaderboard-row {

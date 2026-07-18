@@ -3,39 +3,125 @@
 {% block title %}Predict{% endblock %}
 
 {% block content %}
-<section class="panel form-panel">
-    <a href="{{ league.get_absolute_url }}">Back to league</a>
-    <p class="eyebrow">Prediction</p>
-    <h1 class="match-heading">
-        {% include "leagues/partials/team_badge.html" with team=match.home_team %}
-        {{ match.home_team.name }} vs
-        {% include "leagues/partials/team_badge.html" with team=match.away_team %}
-        {{ match.away_team.name }}
-    </h1>
-    <p class="helper-text">{{ match.kickoff_time|date:"d M, g:i a" }}</p>
-
-    {% if is_locked %}
-        <p class="helper-text">This match is finished, so predictions are locked.</p>
-        {% if prediction %}
-            <div class="locked-prediction">
-                <span>Your prediction</span>
-                <strong>{{ prediction.predicted_home_score }} - {{ prediction.predicted_away_score }}</strong>
-            </div>
+<div class="predict-layout">
+    <section class="panel form-panel">
+        <a href="{{ league.get_absolute_url }}">Back to league</a>
+        <p class="eyebrow">Prediction</p>
+        <h1 class="match-heading">
+            {% include "leagues/partials/team_badge.html" with team=match.home_team %}
+            {{ match.home_team.name }} vs
+            {% include "leagues/partials/team_badge.html" with team=match.away_team %}
+            {{ match.away_team.name }}
+        </h1>
+        <div class="match-info-line">
+            <span>{{ match.kickoff_time|date:"d M, g:i a" }}</span>
+            <span class="deadline-pill{% if is_locked %} locked{% endif %}">{{ match.deadline_label }}</span>
+        </div>
+        {% if match.venue %}
+            <p class="helper-text">{{ match.venue }}</p>
         {% endif %}
-        <a class="primary-button" href="{{ league.get_absolute_url }}">Back to league</a>
-    {% else %}
-        <form method="post" class="prediction-form">
-            {% csrf_token %}
-            <label>
-                {{ match.home_team.name }} score
-                {{ form.predicted_home_score }}
-            </label>
-            <label>
-                {{ match.away_team.name }} score
-                {{ form.predicted_away_score }}
-            </label>
-            <button class="primary-button" type="submit">Save prediction</button>
-        </form>
-    {% endif %}
-</section>
+
+        {% if is_locked %}
+            <p class="helper-text">This match has kicked off, so predictions are locked.</p>
+            {% if prediction %}
+                <div class="locked-prediction">
+                    <span>Your prediction</span>
+                    <strong>{{ prediction.predicted_home_score }} - {{ prediction.predicted_away_score }}</strong>
+                </div>
+            {% endif %}
+            <a class="primary-button" href="{{ league.get_absolute_url }}">Back to league</a>
+        {% else %}
+            <form method="post" class="prediction-form">
+                {% csrf_token %}
+                <label>
+                    {{ match.home_team.name }} score
+                    {{ form.predicted_home_score }}
+                </label>
+                <label>
+                    {{ match.away_team.name }} score
+                    {{ form.predicted_away_score }}
+                </label>
+                <button class="primary-button" type="submit">Save prediction</button>
+            </form>
+        {% endif %}
+    </section>
+
+    <aside class="match-insight-stack">
+        <section class="panel">
+            <p class="eyebrow">League picks</p>
+            <h2>How others see it</h2>
+            {% if match_info.prediction_summary.total %}
+                <div class="sentiment-bars">
+                    <div>
+                        <span>{{ match.home_team.name }}</span>
+                        <strong>{{ match_info.prediction_summary.home_percent }}%</strong>
+                        <i style="--bar: {{ match_info.prediction_summary.home_percent }}%;"></i>
+                    </div>
+                    <div>
+                        <span>Draw</span>
+                        <strong>{{ match_info.prediction_summary.draw_percent }}%</strong>
+                        <i style="--bar: {{ match_info.prediction_summary.draw_percent }}%;"></i>
+                    </div>
+                    <div>
+                        <span>{{ match.away_team.name }}</span>
+                        <strong>{{ match_info.prediction_summary.away_percent }}%</strong>
+                        <i style="--bar: {{ match_info.prediction_summary.away_percent }}%;"></i>
+                    </div>
+                </div>
+
+                {% if match_info.prediction_summary.popular_scores %}
+                    <div class="compact-score-list">
+                        <span>Popular scores</span>
+                        {% for score in match_info.prediction_summary.popular_scores %}
+                            <strong>{{ score.score }} <small>{{ score.percent }}%</small></strong>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="empty-state compact">
+                    <strong>No league trend yet</strong>
+                    <span>Be one of the first to predict this match.</span>
+                </div>
+            {% endif %}
+        </section>
+
+        <section class="panel">
+            <p class="eyebrow">Recent form</p>
+            <h2>Last completed matches</h2>
+            <div class="team-form-grid">
+                <div class="team-form-card">
+                    <h3>{% include "leagues/partials/team_badge.html" with team=match_info.home_form.team %} {{ match_info.home_form.team.name }}</h3>
+                    <p>{{ match_info.home_form.record }} · GF {{ match_info.home_form.goals_for }} · GA {{ match_info.home_form.goals_against }}</p>
+                    {% if match_info.home_form.rows %}
+                        <div class="form-result-list">
+                            {% for row in match_info.home_form.rows %}
+                                <span class="form-result {{ row.result|lower }}">{{ row.result }}</span>
+                                <span>{{ row.match.kickoff_time|date:"d M" }} · {{ row.opponent.name }}</span>
+                                <strong>{{ row.team_score }} - {{ row.opponent_score }}</strong>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="helper-text">No completed matches yet.</p>
+                    {% endif %}
+                </div>
+
+                <div class="team-form-card">
+                    <h3>{% include "leagues/partials/team_badge.html" with team=match_info.away_form.team %} {{ match_info.away_form.team.name }}</h3>
+                    <p>{{ match_info.away_form.record }} · GF {{ match_info.away_form.goals_for }} · GA {{ match_info.away_form.goals_against }}</p>
+                    {% if match_info.away_form.rows %}
+                        <div class="form-result-list">
+                            {% for row in match_info.away_form.rows %}
+                                <span class="form-result {{ row.result|lower }}">{{ row.result }}</span>
+                                <span>{{ row.match.kickoff_time|date:"d M" }} · {{ row.opponent.name }}</span>
+                                <strong>{{ row.team_score }} - {{ row.opponent_score }}</strong>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="helper-text">No completed matches yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+    </aside>
+</div>
 {% endblock %}
