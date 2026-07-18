@@ -203,3 +203,37 @@ class Prediction(models.Model):
 
     def __str__(self):
         return f'{self.user.username}: {self.league} - {self.match}'
+
+
+class OrganiserEnquiry(models.Model):
+    class PreferredFormat(models.TextChoices):
+        SUPPORTER = 'SUPPORTER', 'Supported club only'
+        ALL = 'ALL', 'All matches'
+        FEATURED = 'FEATURED', 'Featured matches only'
+        NOT_SURE = 'NOT_SURE', 'Not sure yet'
+
+    name = models.CharField(max_length=120)
+    email = models.EmailField()
+    competition = models.CharField(max_length=160, blank=True)
+    preferred_format = models.CharField(
+        max_length=20,
+        choices=PreferredFormat.choices,
+        default=PreferredFormat.NOT_SURE,
+    )
+    estimated_players = models.PositiveIntegerField(null=True, blank=True)
+    message = models.TextField(blank=True)
+    source_league = models.ForeignKey(
+        PrivateLeague,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='organiser_enquiries',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    handled = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.name} - {self.competition or "Prediction league"}'

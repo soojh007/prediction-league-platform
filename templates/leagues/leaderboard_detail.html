@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}{{ display_name }} · {{ league.name }}{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Leaderboard detail</p>
+        <h1>{{ display_name }}</h1>
+        <p class="helper-text">{{ league.name }}</p>
+    </div>
+    <a class="secondary-button" href="{{ league.get_absolute_url }}">Back to league</a>
+</section>
+
+<section class="player-detail-grid">
+    <div class="status-card">
+        <span>Total points</span>
+        <strong>{{ total_points }}</strong>
+        <small>{{ prediction_history|length }} recent predictions shown</small>
+    </div>
+    <div class="status-card">
+        <span>Exact scores</span>
+        <strong>{{ accuracy.exact_scores }}</strong>
+        <small>{{ accuracy.exact_percent }}% of settled matches</small>
+    </div>
+    <div class="status-card">
+        <span>Correct results</span>
+        <strong>{{ accuracy.correct_results }}</strong>
+        <small>Correct outcome, not exact</small>
+    </div>
+    <div class="status-card">
+        <span>Supported club</span>
+        {% if membership.supported_team %}
+            <strong class="with-badge compact">
+                {% include "leagues/partials/team_badge.html" with team=membership.supported_team %}
+                {{ membership.supported_team.name }}
+            </strong>
+            <small>{{ league.get_prediction_mode_display }}</small>
+        {% else %}
+            <strong>None</strong>
+            <small>{{ league.get_prediction_mode_display }}</small>
+        {% endif %}
+    </div>
+</section>
+
+<section class="panel">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">Recent predictions</p>
+            <h2>How {{ display_name }} picked</h2>
+        </div>
+        <span class="pill">{{ prediction_history|length }} shown</span>
+    </div>
+
+    <div class="prediction-history-list">
+        {% for row in prediction_history %}
+            <div class="prediction-history-row">
+                <div class="prediction-match">
+                    <strong class="match-title">
+                        {% include "leagues/partials/team_badge.html" with team=row.match.home_team %}
+                        {{ row.match.home_team.name }}
+                        <span>vs</span>
+                        {% include "leagues/partials/team_badge.html" with team=row.match.away_team %}
+                        {{ row.match.away_team.name }}
+                    </strong>
+                    <span>{{ row.match.kickoff_time|date:"d M, g:i a" }}</span>
+                </div>
+
+                <div class="prediction-result-strip">
+                    <div class="score-summary">
+                        <span>Pred</span>
+                        <strong>{{ row.prediction.predicted_home_score }} - {{ row.prediction.predicted_away_score }}</strong>
+                    </div>
+
+                    <div class="score-summary">
+                        <span>Result</span>
+                        {% if row.has_result %}
+                            <strong>{{ row.match.home_score }} - {{ row.match.away_score }}</strong>
+                        {% else %}
+                            <strong class="muted-score">Pending</strong>
+                        {% endif %}
+                    </div>
+
+                    <div class="score-summary">
+                        <span>Status</span>
+                        <strong>{{ row.match.get_status_display }}</strong>
+                    </div>
+
+                    <div class="score-summary points">
+                        <span>Pts</span>
+                        <strong>{{ row.prediction.points }}</strong>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="empty-state">
+                <strong>No predictions yet</strong>
+                <span>This player has not submitted a prediction in this league.</span>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

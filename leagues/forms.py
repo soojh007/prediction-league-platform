@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import User
 
-from .models import Competition, LeagueMembership, Match, Prediction, PrivateLeague, Team
+from .models import Competition, LeagueMembership, Match, OrganiserEnquiry, Prediction, PrivateLeague, Team
 
 
 class LoginForm(AuthenticationForm):
@@ -55,6 +55,24 @@ class AccountForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ('first_name', 'email')
+
+
+class OrganiserEnquiryForm(forms.ModelForm):
+    class Meta:
+        model = OrganiserEnquiry
+        fields = ('name', 'email', 'competition', 'preferred_format', 'estimated_players', 'message')
+        labels = {
+            'preferred_format': 'Preferred format',
+            'estimated_players': 'Estimated players',
+        }
+        widgets = {
+            'competition': forms.TextInput(attrs={'placeholder': 'EPL, SPL, Champions League, office league...'}),
+            'estimated_players': forms.NumberInput(attrs={'min': 1, 'placeholder': '20'}),
+            'message': forms.Textarea(attrs={
+                'rows': 5,
+                'placeholder': 'Tell me what you want to run, who it is for, and when you hope to start.',
+            }),
+        }
 
 
 class PrivateLeagueForm(forms.ModelForm):

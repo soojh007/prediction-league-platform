@@ -4,13 +4,15 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView
 from django.core.exceptions import ImproperlyConfigured
+from django.conf import settings
+from django.core.mail import EmailMessage
 from django.db import models
 from django.db.models import Sum
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
-from .forms import AccountForm, CompetitionBrandingForm, FixtureSyncForm, JoinLeagueForm, LeagueSettingsForm, MatchForm, MatchResultForm, PredictionForm, PrivateLeagueForm, SignUpForm, SupportedTeamForm, TeamForm
+from .forms import AccountForm, CompetitionBrandingForm, FixtureSyncForm, JoinLeagueForm, LeagueSettingsForm, MatchForm, MatchResultForm, OrganiserEnquiryForm, PredictionForm, PrivateLeagueForm, SignUpForm, SupportedTeamForm, TeamForm
 from .models import Competition, LeagueMembership, Match, Prediction, PrivateLeague, Team
 from .services.api_football import ApiFootballError, ApiFootballSyncService
 
@@ -182,6 +184,63 @@ def render_public_league_landing(request, league):
         'league': league,
         'is_league_member': is_league_member,
     })
+
+
+def organiser_enquiry(request):
+    source_league = get_target_league(request)
+    initial = {}
+    if request.user.is_authenticated:
+        initial['name'] = request.user.first_name or request.user.username
+        initial['email'] = request.user.email
+    if source_league is not None:
+        initial['competition'] = source_league.competition.name
+        if source_league.prediction_mode in dict(OrganiserEnquiryForm.base_fields['preferred_format'].choices):
+            initial['preferred_format'] = source_league.prediction_mode
+
+    if request.method == 'POST':
+        form = OrganiserEnquiryForm(request.POST)
+        if form.is_valid():
+            enquiry = form.save(commit=False)
+            enquiry.source_league = source_league
+            enquiry.save()
+            notify_organiser_enquiry(enquiry)
+            messages.success(request, 'Thanks. Your organiser enquiry has been sent.')
+            return redirect('home')
+    else:
+        form = OrganiserEnquiryForm(initial=initial)
+
+    return render(request, 'leagues/organiser_enquiry.html', {
+        'form': form,
+        'source_league': source_league,
+    })
+
+
+def notify_organiser_enquiry(enquiry):
+    body = '\n'.join([
+        'New organiser enquiry',
+        '',
+        f'Name: {enquiry.name}',
+        f'Email: {enquiry.email}',
+        f'Competition: {enquiry.competition or "-"}',
+        f'Preferred format: {enquiry.get_preferred_format_display()}',
+        f'Estimated players: {enquiry.estimated_players or "-"}',
+        f'Source league: {enquiry.source_league.name if enquiry.source_league else "-"}',
+        '',
+        'Message:',
+        enquiry.message or '-',
+    ])
+    email = EmailMessage(
+        subject=f'Prediction League organiser enquiry from {enquiry.name}',
+        body=body,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[settings.CONTACT_EMAIL],
+        reply_to=[enquiry.email],
+    )
+    try:
+        email.send(fail_silently=False)
+    except Exception:
+        # Keep the saved database enquiry as the reliable fallback if SMTP is unavailable.
+        pass
 
 
 @login_required
@@ -781,6 +840,36 @@ def league_detail(request, pk):
 
 
 @login_required
+def leaderboard_detail(request, pk, user_pk):
+    if is_organiser(request.user):
+        messages.error(request, 'Organiser accounts cannot view player league pages. Use a separate player account to play.')
+        return redirect('dashboard')
+
+    league = get_object_or_404(PrivateLeague.objects.select_related('competition', 'owner'), pk=pk)
+    get_membership_or_404(league, request.user)
+    target_membership = get_object_or_404(
+        LeagueMembership.objects
+        .filter(user__is_staff=False, user__is_superuser=False)
+        .select_related('user', 'supported_team'),
+        league=league,
+        user_id=user_pk,
+    )
+    prediction_history = build_prediction_history(target_membership.user, league=league)
+    accuracy = build_accuracy_summary(prediction_history)
+    total_points = sum(row['prediction'].points for row in prediction_history)
+
+    return render(request, 'leagues/leaderboard_detail.html', {
+        'league': league,
+        'membership': target_membership,
+        'player': target_membership.user,
+        'display_name': target_membership.user.first_name or target_membership.user.username,
+        'prediction_history': prediction_history[:8],
+        'accuracy': accuracy,
+        'total_points': total_points,
+    })
+
+
+@login_required
 def choose_team(request, pk):
     if is_organiser(request.user):
         messages.error(request, 'Organiser accounts cannot choose a supported club. Use a separate player account to play.')
@@ -1019,13 +1108,16 @@ def build_team_recent_form(competition, team, before_time, limit=5):
     }
 
 
-def build_prediction_history(user):
+def build_prediction_history(user, league=None):
     predictions = (
         Prediction.objects
         .filter(user=user)
         .select_related('league', 'match', 'match__home_team', 'match__away_team')
         .order_by('-match__kickoff_time', '-updated_at')
     )
+    if league is not None:
+        predictions = predictions.filter(league=league)
+
     rows = []
     for prediction in predictions:
         match = prediction.match

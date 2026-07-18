@@ -152,7 +152,7 @@
         <h2>{{ league.get_ranking_mode_display }}</h2>
         <div class="leaderboard-list">
             {% for row in leaderboard %}
-                <div class="leaderboard-row">
+                <a class="leaderboard-row leaderboard-link" href="{% url 'leaderboard_detail' league.pk row.user.pk %}">
                     <span class="rank">{{ forloop.counter }}</span>
                     <div class="leaderboard-main">
                         <strong>{{ row.display_name }}</strong>
@@ -165,7 +165,7 @@
                         </span>
                     </div>
                     <strong class="leaderboard-points">{{ row.total_points }}</strong>
-                </div>
+                </a>
             {% empty %}
                 <div class="empty-state">
                     <strong>Leaderboard starts after first result</strong>

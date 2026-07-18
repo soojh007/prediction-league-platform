@@ -1,9 +1,11 @@
 from django.contrib.auth.models import User
+from django.core import mail
 from django.test import TestCase
+from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from .models import Competition, LeagueMembership, Match, Prediction, PrivateLeague, Team
+from .models import Competition, LeagueMembership, Match, OrganiserEnquiry, Prediction, PrivateLeague, Team
 
 
 class LeagueJoinFlowTests(TestCase):
@@ -215,3 +217,111 @@ class LeagueJoinFlowTests(TestCase):
         self.assertContains(response, '2 - 1')
         self.assertContains(response, 'Recent form')
         self.assertContains(response, 'Main Stadium')
+
+    def test_leaderboard_rows_link_to_player_detail(self):
+        self.epl.prediction_mode = PrivateLeague.PredictionMode.ALL
+        self.epl.save()
+        home = Team.objects.create(competition=self.epl.competition, name='Arsenal')
+        away = Team.objects.create(competition=self.epl.competition, name='Chelsea')
+        match = Match.objects.create(
+            competition=self.epl.competition,
+            home_team=home,
+            away_team=away,
+            kickoff_time=timezone.now() - timezone.timedelta(days=1),
+            status=Match.Status.FINISHED,
+            home_score=2,
+            away_score=1,
+        )
+        LeagueMembership.objects.create(league=self.epl, user=self.player)
+        Prediction.objects.create(
+            user=self.player,
+            league=self.epl,
+            match=match,
+            predicted_home_score=2,
+            predicted_away_score=1,
+        )
+
+        self.client.force_login(self.player)
+        response = self.client.get(self.epl.get_absolute_url())
+
+        detail_url = reverse('leaderboard_detail', args=[self.epl.pk, self.player.pk])
+        self.assertContains(response, f'href="{detail_url}"')
+
+    def test_leaderboard_detail_shows_player_breakdown(self):
+        self.epl.prediction_mode = PrivateLeague.PredictionMode.SUPPORTER
+        self.epl.save()
+        home = Team.objects.create(competition=self.epl.competition, name='Arsenal')
+        away = Team.objects.create(competition=self.epl.competition, name='Chelsea')
+        exact_match = Match.objects.create(
+            competition=self.epl.competition,
+            home_team=home,
+            away_team=away,
+            kickoff_time=timezone.now() - timezone.timedelta(days=2),
+            status=Match.Status.FINISHED,
+            home_score=2,
+            away_score=1,
+        )
+        result_match = Match.objects.create(
+            competition=self.epl.competition,
+            home_team=home,
+            away_team=away,
+            kickoff_time=timezone.now() - timezone.timedelta(days=1),
+            status=Match.Status.FINISHED,
+            home_score=3,
+            away_score=1,
+        )
+        LeagueMembership.objects.create(league=self.epl, user=self.player, supported_team=home)
+        Prediction.objects.create(
+            user=self.player,
+            league=self.epl,
+            match=exact_match,
+            predicted_home_score=2,
+            predicted_away_score=1,
+        )
+        Prediction.objects.create(
+            user=self.player,
+            league=self.epl,
+            match=result_match,
+            predicted_home_score=2,
+            predicted_away_score=0,
+        )
+
+        self.client.force_login(self.player)
+        response = self.client.get(reverse('leaderboard_detail', args=[self.epl.pk, self.player.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Exact scores')
+        self.assertContains(response, '<strong>1</strong>', html=True)
+        self.assertContains(response, 'Correct results')
+        self.assertContains(response, 'Arsenal')
+        self.assertContains(response, 'How player picked')
+        self.assertContains(response, '2 - 1')
+
+    def test_landing_page_links_to_organiser_enquiry_form(self):
+        response = self.client.get(reverse('home'))
+
+        self.assertContains(response, reverse('organiser_enquiry'))
+        self.assertContains(response, 'Enquire')
+
+    @override_settings(
+        EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
+        CONTACT_EMAIL='hello@predictionleague.site',
+        DEFAULT_FROM_EMAIL='Prediction League <no-reply@predictionleague.site>',
+    )
+    def test_organiser_enquiry_form_saves_enquiry_and_sends_email(self):
+        response = self.client.post(reverse('organiser_enquiry'), {
+            'name': 'Soo',
+            'email': 'soo@example.com',
+            'competition': 'Premier League',
+            'preferred_format': 'SUPPORTER',
+            'estimated_players': 24,
+            'message': 'I want to run a league for friends.',
+        })
+
+        self.assertRedirects(response, reverse('home'))
+        enquiry = OrganiserEnquiry.objects.get()
+        self.assertEqual(enquiry.email, 'soo@example.com')
+        self.assertEqual(enquiry.preferred_format, 'SUPPORTER')
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ['hello@predictionleague.site'])
+        self.assertEqual(mail.outbox[0].reply_to, ['soo@example.com'])

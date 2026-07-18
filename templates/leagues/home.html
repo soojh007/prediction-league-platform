@@ -175,8 +175,8 @@
         <h2>Want to run a private prediction league?</h2>
         <p>Tell me the competition, format, and group size you have in mind. I can help set up a league for your friends, office, club, or community.</p>
     </div>
-    <a class="secondary-button" href="mailto:hello@predictionleague.site?subject=Prediction%20League%20organiser%20enquiry&body=Hi%2C%20I%20would%20like%20to%20run%20a%20prediction%20league.%0A%0ACompetition%3A%0AFormat%20%28supported%20club%20or%20all%20matches%29%3A%0AEstimated%20players%3A%0A">
-        Enquire by email
+    <a class="secondary-button" href="{% url 'organiser_enquiry' %}{% if league %}?league={{ league.slug }}{% endif %}">
+        Enquire
     </a>
 </section>
 {% endblock %}

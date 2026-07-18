@@ -8,6 +8,7 @@ urlpatterns = [
     path('play/<slug:slug>/rules/', views.league_rules, name='league_rules'),
     path('play/<slug:slug>/join/', views.join_public_league, name='join_public_league'),
     path('signup/', views.signup, name='signup'),
+    path('organiser-enquiry/', views.organiser_enquiry, name='organiser_enquiry'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('profile/', views.profile, name='profile'),
     path('organiser/leagues/', views.organiser_leagues, name='organiser_leagues'),
@@ -25,6 +26,7 @@ urlpatterns = [
     path('leagues/create/', views.create_league, name='create_league'),
     path('leagues/join/', views.join_league, name='join_league'),
     path('leagues/<int:pk>/', views.league_detail, name='league_detail'),
+    path('leagues/<int:pk>/leaderboard/<int:user_pk>/', views.leaderboard_detail, name='leaderboard_detail'),
     path('leagues/<int:pk>/team/', views.choose_team, name='choose_team'),
     path('leagues/<int:league_pk>/predict/<int:match_pk>/', views.predict, name='predict'),
 ]

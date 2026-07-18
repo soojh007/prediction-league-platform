@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Competition, LeagueMembership, Match, Prediction, PrivateLeague, Team
+from .models import Competition, LeagueMembership, Match, OrganiserEnquiry, Prediction, PrivateLeague, Team
 
 
 class TeamInline(admin.TabularInline):
@@ -71,3 +71,11 @@ class TeamAdmin(admin.ModelAdmin):
     list_display = ('name', 'short_name', 'competition', 'api_team_id')
     list_filter = ('competition',)
     search_fields = ('name', 'short_name')
+
+
+@admin.register(OrganiserEnquiry)
+class OrganiserEnquiryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'email', 'competition', 'preferred_format', 'estimated_players', 'handled', 'created_at')
+    list_filter = ('preferred_format', 'handled', 'created_at')
+    search_fields = ('name', 'email', 'competition', 'message')
+    readonly_fields = ('created_at',)

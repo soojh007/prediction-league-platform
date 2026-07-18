@@ -105,6 +105,7 @@ EMAIL_HOST_USER=<smtp user>
 EMAIL_HOST_PASSWORD=<smtp password>
 EMAIL_USE_TLS=True
 DEFAULT_FROM_EMAIL=Prediction League <no-reply@your-domain.com>
+CONTACT_EMAIL=hello@your-domain.com
 ```
 
 ### Deploy Steps

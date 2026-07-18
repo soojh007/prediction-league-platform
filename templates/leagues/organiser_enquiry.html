@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Organiser Enquiry{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Organiser enquiry</p>
+        <h1>Run a prediction league</h1>
+        <p class="helper-text">Send the details here and I will follow up from hello@predictionleague.site.</p>
+    </div>
+    <a class="secondary-button" href="{% if source_league %}{% url 'public_league_landing' source_league.slug %}{% else %}{% url 'home' %}{% endif %}">Back</a>
+</section>
+
+<section class="panel form-panel">
+    <form method="post" class="form-stack">
+        {% csrf_token %}
+
+        <div>
+            {{ form.name.label_tag }}
+            {{ form.name }}
+            {{ form.name.errors }}
+        </div>
+
+        <div>
+            {{ form.email.label_tag }}
+            {{ form.email }}
+            {{ form.email.errors }}
+        </div>
+
+        <div>
+            {{ form.competition.label_tag }}
+            {{ form.competition }}
+            {{ form.competition.errors }}
+        </div>
+
+        <div class="form-grid two-col">
+            <div>
+                {{ form.preferred_format.label_tag }}
+                {{ form.preferred_format }}
+                {{ form.preferred_format.errors }}
+            </div>
+            <div>
+                {{ form.estimated_players.label_tag }}
+                {{ form.estimated_players }}
+                {{ form.estimated_players.errors }}
+            </div>
+        </div>
+
+        <div>
+            {{ form.message.label_tag }}
+            {{ form.message }}
+            {{ form.message.errors }}
+        </div>
+
+        <button class="primary-button" type="submit">Send enquiry</button>
+    </form>
+</section>
+{% endblock %}
