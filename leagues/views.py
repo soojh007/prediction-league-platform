@@ -1024,15 +1024,6 @@ def build_match_info(league, match, user):
 
 
 def build_match_prediction_summary(league, match, user):
-    if match.status != Match.Status.FINISHED:
-        return {
-            'total': 0,
-            'home_percent': 0,
-            'draw_percent': 0,
-            'away_percent': 0,
-            'popular_scores': [],
-        }
-
     predictions = list(
         Prediction.objects
         .filter(league=league, match=match)

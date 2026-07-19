@@ -213,8 +213,8 @@ class LeagueJoinFlowTests(TestCase):
         response = self.client.get(reverse('predict', args=[self.epl.pk, match.pk]))
 
         self.assertContains(response, 'How others see it')
-        self.assertContains(response, 'No league trend yet')
-        self.assertNotContains(response, '4 - 3')
+        self.assertContains(response, 'Popular scores')
+        self.assertContains(response, '4 - 3')
         self.assertContains(response, 'Recent form')
         self.assertContains(response, 'Main Stadium')
 
