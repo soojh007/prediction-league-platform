@@ -41,14 +41,14 @@ class Command(BaseCommand):
             season=2026,
             country='Singapore',
             teams=[
-                ('Tampines', 'TAM', '#f38b00'),
-                ('Lion City', 'LCS', '#2148b5'),
-                ('Albirex', 'ALB', '#f26522'),
-                ('Hougang', 'HOU', '#d62828'),
-                ('Geylang', 'GEY', '#188f5c'),
-                ('Balestier', 'BAL', '#c62838'),
+                ('Tampines Rovers', 'TAM', '#f38b00'),
+                ('Lion City Sailors', 'LCS', '#2148b5'),
+                ('FC Jurong', 'FCJ', '#ec2b35'),
+                ('Hougang United', 'HOU', '#d62828'),
+                ('Geylang International', 'GEY', '#188f5c'),
+                ('Balestier Khalsa', 'BAL', '#c62838'),
                 ('Young Lions', 'YLI', '#3f7fc1'),
-                ('Brunei DPMM', 'DPM', '#222222'),
+                ('Tanjong Pagar', 'TPU', '#1f5aa6'),
             ],
         )
 
@@ -64,14 +64,14 @@ class Command(BaseCommand):
         ])
 
         self.create_matches(spl, [
-            ('Tampines', 'Lion City', 1, '20:15', True),
-            ('Albirex', 'Hougang', 2, '18:00', False),
-            ('Geylang', 'Balestier', 2, '20:15', False),
-            ('Young Lions', 'Brunei DPMM', 3, '18:00', True),
-            ('Lion City', 'Albirex', 8, '20:15', True),
-            ('Hougang', 'Tampines', 9, '18:00', True),
-            ('Balestier', 'Young Lions', 9, '20:15', False),
-            ('Brunei DPMM', 'Geylang', 10, '18:00', False),
+            ('Tampines Rovers', 'Lion City Sailors', 1, '20:15', True),
+            ('FC Jurong', 'Hougang United', 2, '18:00', False),
+            ('Geylang International', 'Balestier Khalsa', 2, '20:15', False),
+            ('Young Lions', 'Tanjong Pagar', 3, '18:00', True),
+            ('Lion City Sailors', 'FC Jurong', 8, '20:15', True),
+            ('Hougang United', 'Tampines Rovers', 9, '18:00', True),
+            ('Balestier Khalsa', 'Young Lions', 9, '20:15', False),
+            ('Tanjong Pagar', 'Geylang International', 10, '18:00', False),
         ])
 
         league, _ = PrivateLeague.objects.update_or_create(

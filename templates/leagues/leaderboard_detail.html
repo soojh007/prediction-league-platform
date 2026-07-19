@@ -64,6 +64,9 @@
                         {{ row.match.away_team.name }}
                     </strong>
                     <span>{{ row.match.kickoff_time|date:"d M, g:i a" }}</span>
+                    {% if not row.counts_towards_league %}
+                        <span class="deadline-pill locked">Does not count</span>
+                    {% endif %}
                 </div>
 
                 <div class="prediction-result-strip">

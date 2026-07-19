@@ -661,7 +661,10 @@ def organiser_match_edit(request, league_pk, match_pk):
     if request.method == 'POST':
         form = MatchForm(request.POST, instance=match, competition=league.competition)
         if form.is_valid():
+            old_counts_towards_league = match.counts_towards_league
             form.save()
+            if old_counts_towards_league != match.counts_towards_league:
+                recalculate_match_points(league, match)
             messages.success(request, 'Match updated.')
             return redirect('organiser_matches', pk=league.pk)
     else:
@@ -856,7 +859,10 @@ def leaderboard_detail(request, pk, user_pk):
     )
     prediction_history = build_prediction_history(target_membership.user, league=league)
     accuracy = build_accuracy_summary(prediction_history)
-    total_points = sum(row['prediction'].points for row in prediction_history)
+    total_points = sum(
+        row['prediction'].points for row in prediction_history
+        if row['counts_towards_league']
+    )
 
     return render(request, 'leagues/leaderboard_detail.html', {
         'league': league,
@@ -1136,12 +1142,16 @@ def build_prediction_history(user, league=None):
             'has_result': has_result,
             'exact': exact,
             'correct_result': correct_result,
+            'counts_towards_league': match.counts_towards_league,
         })
     return rows
 
 
 def build_accuracy_summary(prediction_history):
-    finished_rows = [row for row in prediction_history if row['has_result']]
+    finished_rows = [
+        row for row in prediction_history
+        if row['has_result'] and row['counts_towards_league']
+    ]
     exact_scores = sum(1 for row in finished_rows if row['exact'])
     correct_results = sum(1 for row in finished_rows if row['correct_result'] and not row['exact'])
     other_predictions = max(len(finished_rows) - exact_scores - correct_results, 0)
@@ -1172,7 +1182,11 @@ def build_leaderboard(league):
     )
     rows = []
     for membership in memberships:
-        predictions = Prediction.objects.filter(user=membership.user, league=league)
+        predictions = Prediction.objects.filter(
+            user=membership.user,
+            league=league,
+            match__counts_towards_league=True,
+        )
         prediction_count = predictions.count()
         total_points = predictions.aggregate(total=Sum('points'))['total'] or 0
         exact_scores = predictions.filter(points=7).count()
@@ -1199,19 +1213,25 @@ def build_leaderboard(league):
 
 def build_league_status(user, league, matches, predictions, leaderboard):
     matches = list(matches)
-    total_matches = len(matches)
-    predicted_count = len(predictions)
-    open_matches = sum(1 for match in matches if not is_match_locked(match))
+    table_matches = [match for match in matches if match.counts_towards_league]
+    table_predictions = {
+        match_id: prediction
+        for match_id, prediction in predictions.items()
+        if prediction.match.counts_towards_league
+    }
+    total_matches = len(table_matches)
+    predicted_count = len(table_predictions)
+    open_matches = sum(1 for match in table_matches if not is_match_locked(match))
     finished_matches = max(total_matches - open_matches, 0)
     unpredicted_open_matches = sum(
-        1 for match in matches
-        if not is_match_locked(match) and match.id not in predictions
+        1 for match in table_matches
+        if not is_match_locked(match) and match.id not in table_predictions
     )
     completion_percent = round(predicted_count / total_matches * 100) if total_matches else 0
     next_prediction = next(
         (
-            match for match in matches
-            if not is_match_locked(match) and match.id not in predictions
+            match for match in table_matches
+            if not is_match_locked(match) and match.id not in table_predictions
         ),
         None,
     )

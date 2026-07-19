@@ -126,6 +126,9 @@
                                     <span class="deadline-pill{% if match.is_locked %} locked{% endif %}">
                                         {{ match.deadline_label }}
                                     </span>
+                                    {% if not match.counts_towards_league %}
+                                        <span class="deadline-pill locked">Does not count</span>
+                                    {% endif %}
                                 </div>
                                 {% if match.is_locked %}
                                     <span class="disabled-button">{{ match.deadline_label }}</span>

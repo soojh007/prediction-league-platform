@@ -145,6 +145,7 @@ class Match(models.Model):
     home_score = models.IntegerField(null=True, blank=True)
     away_score = models.IntegerField(null=True, blank=True)
     featured = models.BooleanField(default=False)
+    counts_towards_league = models.BooleanField(default=True)
 
     class Meta:
         ordering = ['kickoff_time']
@@ -171,6 +172,9 @@ class Prediction(models.Model):
         unique_together = [('user', 'league', 'match')]
 
     def calculate_points(self):
+        if not self.match.counts_towards_league:
+            return 0
+
         if self.match.home_score is None or self.match.away_score is None:
             return 0
 

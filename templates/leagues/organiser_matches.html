@@ -52,6 +52,9 @@
                     {% if match.featured %}
                         <span class="pill">Featured</span>
                     {% endif %}
+                    {% if not match.counts_towards_league %}
+                        <span class="pill">No table points</span>
+                    {% endif %}
                 </div>
                 <div class="organiser-actions">
                     <a class="predict-button" href="{% url 'organiser_match_edit' league.pk match.pk %}">Edit</a>

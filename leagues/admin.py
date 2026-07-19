@@ -54,8 +54,8 @@ class LeagueMembershipAdmin(admin.ModelAdmin):
 
 @admin.register(Match)
 class MatchAdmin(admin.ModelAdmin):
-    list_display = ('home_team', 'away_team', 'competition', 'kickoff_time', 'status', 'featured', 'api_fixture_id')
-    list_filter = ('competition', 'status', 'featured')
+    list_display = ('home_team', 'away_team', 'competition', 'kickoff_time', 'status', 'featured', 'counts_towards_league', 'api_fixture_id')
+    list_filter = ('competition', 'status', 'featured', 'counts_towards_league')
     search_fields = ('home_team__name', 'away_team__name', 'venue')
 
 

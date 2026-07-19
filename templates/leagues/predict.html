@@ -16,6 +16,9 @@
         <div class="match-info-line">
             <span>{{ match.kickoff_time|date:"d M, g:i a" }}</span>
             <span class="deadline-pill{% if is_locked %} locked{% endif %}">{{ match.deadline_label }}</span>
+            {% if not match.counts_towards_league %}
+                <span class="deadline-pill locked">Does not count toward leaderboard</span>
+            {% endif %}
         </div>
         {% if match.venue %}
             <p class="helper-text">{{ match.venue }}</p>

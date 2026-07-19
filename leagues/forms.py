@@ -200,7 +200,14 @@ class MatchForm(forms.ModelForm):
             'venue',
             'status',
             'featured',
+            'counts_towards_league',
         )
+        labels = {
+            'counts_towards_league': 'Count towards league table',
+        }
+        help_texts = {
+            'counts_towards_league': 'Turn this off for one-off matches such as Charity Shield or cup fixtures.',
+        }
         widgets = {
             'kickoff_time': forms.DateTimeInput(
                 attrs={'type': 'datetime-local'},

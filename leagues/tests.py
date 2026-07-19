@@ -297,6 +297,55 @@ class LeagueJoinFlowTests(TestCase):
         self.assertContains(response, 'How player picked')
         self.assertContains(response, '2 - 1')
 
+    def test_one_off_matches_do_not_count_towards_leaderboard(self):
+        self.epl.prediction_mode = PrivateLeague.PredictionMode.ALL
+        self.epl.save()
+        home = Team.objects.create(competition=self.epl.competition, name='Arsenal')
+        away = Team.objects.create(competition=self.epl.competition, name='Chelsea')
+        league_match = Match.objects.create(
+            competition=self.epl.competition,
+            home_team=home,
+            away_team=away,
+            kickoff_time=timezone.now() - timezone.timedelta(days=2),
+            status=Match.Status.FINISHED,
+            home_score=2,
+            away_score=1,
+        )
+        one_off_match = Match.objects.create(
+            competition=self.epl.competition,
+            home_team=away,
+            away_team=home,
+            kickoff_time=timezone.now() - timezone.timedelta(days=1),
+            status=Match.Status.FINISHED,
+            home_score=3,
+            away_score=0,
+            counts_towards_league=False,
+        )
+        LeagueMembership.objects.create(league=self.epl, user=self.player)
+        Prediction.objects.create(
+            user=self.player,
+            league=self.epl,
+            match=league_match,
+            predicted_home_score=2,
+            predicted_away_score=1,
+        )
+        bonus_prediction = Prediction.objects.create(
+            user=self.player,
+            league=self.epl,
+            match=one_off_match,
+            predicted_home_score=3,
+            predicted_away_score=0,
+        )
+
+        self.assertEqual(bonus_prediction.points, 0)
+
+        self.client.force_login(self.player)
+        response = self.client.get(self.epl.get_absolute_url())
+
+        self.assertContains(response, 'Does not count')
+        self.assertContains(response, '<strong class="leaderboard-points">7</strong>', html=True)
+        self.assertContains(response, '1 predictions · 1 exact')
+
     def test_landing_page_links_to_organiser_enquiry_form(self):
         response = self.client.get(reverse('home'))
 
