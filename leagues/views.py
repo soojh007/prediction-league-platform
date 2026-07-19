@@ -857,7 +857,12 @@ def leaderboard_detail(request, pk, user_pk):
         league=league,
         user_id=user_pk,
     )
-    prediction_history = build_prediction_history(target_membership.user, league=league)
+    is_own_detail = target_membership.user_id == request.user.id
+    prediction_history = build_prediction_history(
+        target_membership.user,
+        league=league,
+        include_unsettled=is_own_detail,
+    )
     accuracy = build_accuracy_summary(prediction_history)
     total_points = sum(
         row['prediction'].points for row in prediction_history
@@ -872,6 +877,7 @@ def leaderboard_detail(request, pk, user_pk):
         'prediction_history': prediction_history[:8],
         'accuracy': accuracy,
         'total_points': total_points,
+        'is_own_detail': is_own_detail,
     })
 
 
@@ -1018,6 +1024,15 @@ def build_match_info(league, match, user):
 
 
 def build_match_prediction_summary(league, match, user):
+    if match.status != Match.Status.FINISHED:
+        return {
+            'total': 0,
+            'home_percent': 0,
+            'draw_percent': 0,
+            'away_percent': 0,
+            'popular_scores': [],
+        }
+
     predictions = list(
         Prediction.objects
         .filter(league=league, match=match)
@@ -1114,7 +1129,7 @@ def build_team_recent_form(competition, team, before_time, limit=5):
     }
 
 
-def build_prediction_history(user, league=None):
+def build_prediction_history(user, league=None, *, include_unsettled=True):
     predictions = (
         Prediction.objects
         .filter(user=user)
@@ -1123,6 +1138,12 @@ def build_prediction_history(user, league=None):
     )
     if league is not None:
         predictions = predictions.filter(league=league)
+    if not include_unsettled:
+        predictions = predictions.filter(
+            match__status=Match.Status.FINISHED,
+            match__home_score__isnull=False,
+            match__away_score__isnull=False,
+        )
 
     rows = []
     for prediction in predictions:
@@ -1219,19 +1240,20 @@ def build_league_status(user, league, matches, predictions, leaderboard):
         for match_id, prediction in predictions.items()
         if prediction.match.counts_towards_league
     }
+    open_playable_matches = [match for match in matches if not is_match_locked(match)]
     total_matches = len(table_matches)
     predicted_count = len(table_predictions)
-    open_matches = sum(1 for match in table_matches if not is_match_locked(match))
-    finished_matches = max(total_matches - open_matches, 0)
+    open_matches = len(open_playable_matches)
+    finished_matches = sum(1 for match in matches if is_match_locked(match))
     unpredicted_open_matches = sum(
-        1 for match in table_matches
-        if not is_match_locked(match) and match.id not in table_predictions
+        1 for match in open_playable_matches
+        if match.id not in predictions
     )
     completion_percent = round(predicted_count / total_matches * 100) if total_matches else 0
     next_prediction = next(
         (
-            match for match in table_matches
-            if not is_match_locked(match) and match.id not in table_predictions
+            match for match in open_playable_matches
+            if match.id not in predictions
         ),
         None,
     )

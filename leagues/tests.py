@@ -205,16 +205,16 @@ class LeagueJoinFlowTests(TestCase):
             user=player_two,
             league=self.epl,
             match=match,
-            predicted_home_score=2,
-            predicted_away_score=1,
+            predicted_home_score=4,
+            predicted_away_score=3,
         )
 
         self.client.force_login(self.player)
         response = self.client.get(reverse('predict', args=[self.epl.pk, match.pk]))
 
         self.assertContains(response, 'How others see it')
-        self.assertContains(response, 'Popular scores')
-        self.assertContains(response, '2 - 1')
+        self.assertContains(response, 'No league trend yet')
+        self.assertNotContains(response, '4 - 3')
         self.assertContains(response, 'Recent form')
         self.assertContains(response, 'Main Stadium')
 
@@ -297,6 +297,58 @@ class LeagueJoinFlowTests(TestCase):
         self.assertContains(response, 'How player picked')
         self.assertContains(response, '2 - 1')
 
+    def test_leaderboard_detail_hides_other_players_unsettled_predictions(self):
+        self.epl.prediction_mode = PrivateLeague.PredictionMode.ALL
+        self.epl.save()
+        viewer = User.objects.create_user(username='viewer', password='password123')
+        home = Team.objects.create(competition=self.epl.competition, name='Arsenal')
+        away = Team.objects.create(competition=self.epl.competition, name='Chelsea')
+        upcoming_match = Match.objects.create(
+            competition=self.epl.competition,
+            home_team=home,
+            away_team=away,
+            kickoff_time=timezone.now() + timezone.timedelta(days=1),
+            status=Match.Status.UPCOMING,
+        )
+        finished_match = Match.objects.create(
+            competition=self.epl.competition,
+            home_team=away,
+            away_team=home,
+            kickoff_time=timezone.now() - timezone.timedelta(days=1),
+            status=Match.Status.FINISHED,
+            home_score=1,
+            away_score=0,
+        )
+        LeagueMembership.objects.create(league=self.epl, user=self.player)
+        LeagueMembership.objects.create(league=self.epl, user=viewer)
+        Prediction.objects.create(
+            user=self.player,
+            league=self.epl,
+            match=upcoming_match,
+            predicted_home_score=4,
+            predicted_away_score=3,
+        )
+        Prediction.objects.create(
+            user=self.player,
+            league=self.epl,
+            match=finished_match,
+            predicted_home_score=1,
+            predicted_away_score=0,
+        )
+
+        self.client.force_login(viewer)
+        response = self.client.get(reverse('leaderboard_detail', args=[self.epl.pk, self.player.pk]))
+
+        self.assertContains(response, '1 - 0')
+        self.assertNotContains(response, '4 - 3')
+        self.assertNotContains(response, 'Pending')
+
+        self.client.force_login(self.player)
+        response = self.client.get(reverse('leaderboard_detail', args=[self.epl.pk, self.player.pk]))
+
+        self.assertContains(response, '4 - 3')
+        self.assertContains(response, 'Pending')
+
     def test_one_off_matches_do_not_count_towards_leaderboard(self):
         self.epl.prediction_mode = PrivateLeague.PredictionMode.ALL
         self.epl.save()
@@ -345,6 +397,28 @@ class LeagueJoinFlowTests(TestCase):
         self.assertContains(response, 'Does not count')
         self.assertContains(response, '<strong class="leaderboard-points">7</strong>', html=True)
         self.assertContains(response, '1 predictions · 1 exact')
+
+    def test_one_off_matches_can_be_next_prediction(self):
+        self.epl.prediction_mode = PrivateLeague.PredictionMode.ALL
+        self.epl.save()
+        home = Team.objects.create(competition=self.epl.competition, name='Arsenal')
+        away = Team.objects.create(competition=self.epl.competition, name='Chelsea')
+        Match.objects.create(
+            competition=self.epl.competition,
+            home_team=home,
+            away_team=away,
+            kickoff_time=timezone.now() + timezone.timedelta(days=1),
+            status=Match.Status.UPCOMING,
+            counts_towards_league=False,
+        )
+        LeagueMembership.objects.create(league=self.epl, user=self.player)
+
+        self.client.force_login(self.player)
+        response = self.client.get(self.epl.get_absolute_url())
+
+        self.assertContains(response, 'Next prediction')
+        self.assertContains(response, 'Arsenal')
+        self.assertContains(response, 'Predict now')
 
     def test_landing_page_links_to_organiser_enquiry_form(self):
         response = self.client.get(reverse('home'))

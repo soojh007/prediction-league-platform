@@ -97,8 +97,13 @@
             </div>
         {% empty %}
             <div class="empty-state">
-                <strong>No predictions yet</strong>
-                <span>This player has not submitted a prediction in this league.</span>
+                {% if is_own_detail %}
+                    <strong>No predictions yet</strong>
+                    <span>Your predictions will appear here after you submit them.</span>
+                {% else %}
+                    <strong>No finished predictions yet</strong>
+                    <span>This player's picks will appear after those matches are settled.</span>
+                {% endif %}
             </div>
         {% endfor %}
     </div>
