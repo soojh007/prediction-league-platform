@@ -1,0 +1,85 @@
+kickoff_time,home_team,away_team,venue,stage,featured,counts_towards_league
+2026-09-11T19:30:00+08:00,Tampines Rovers,Balestier Khalsa,OUR TAMPINES HUB,League,false,true
+2026-09-12T19:30:00+08:00,Hougang United,Lion City Sailors,Bishan Stadium,League,false,true
+2026-09-13T19:30:00+08:00,Young Lions,FC Jurong,Jalan Besar Stadium,League,false,true
+2026-09-14T19:30:00+08:00,Geylang International,Tanjong Pagar,OUR TAMPINES HUB,League,false,true
+2026-09-18T19:30:00+08:00,FC Jurong,Hougang United,Jurong East Stadium,League,false,true
+2026-09-19T19:30:00+08:00,Balestier Khalsa,Tanjong Pagar,Bishan Stadium,League,false,true
+2026-09-19T19:30:00+08:00,Young Lions,Geylang International,Jalan Besar Stadium,League,false,true
+2026-10-10T19:30:00+08:00,Geylang International,FC Jurong,OUR TAMPINES HUB,League,false,true
+2026-10-11T19:30:00+08:00,Tanjong Pagar,Tampines Rovers,Jurong East Stadium,League,false,true
+2026-10-11T19:30:00+08:00,Lion City Sailors,Young Lions,Jalan Besar Stadium,League,false,true
+2026-10-12T19:30:00+08:00,Hougang United,Balestier Khalsa,Bishan Stadium,League,false,true
+2026-10-16T19:30:00+08:00,Tanjong Pagar,Hougang United,Jurong East Stadium,League,false,true
+2026-10-17T19:30:00+08:00,Balestier Khalsa,Geylang International,Bishan Stadium,League,false,true
+2026-10-18T19:30:00+08:00,Tampines Rovers,Young Lions,OUR TAMPINES HUB,League,false,true
+2026-10-18T19:30:00+08:00,FC Jurong,Lion City Sailors,Jurong East Stadium,League,false,true
+2026-10-21T19:30:00+08:00,Lion City Sailors,Tampines Rovers,Jalan Besar Stadium,League,false,true
+2026-10-24T19:30:00+08:00,Young Lions,Balestier Khalsa,Jalan Besar Stadium,League,false,true
+2026-10-25T19:30:00+08:00,FC Jurong,Tampines Rovers,Jurong East Stadium,League,false,true
+2026-10-25T19:30:00+08:00,Lion City Sailors,Tanjong Pagar,Jalan Besar Stadium,League,false,true
+2026-10-26T19:30:00+08:00,Geylang International,Hougang United,OUR TAMPINES HUB,League,false,true
+2026-10-30T19:30:00+08:00,Tanjong Pagar,FC Jurong,Jurong East Stadium,League,false,true
+2026-10-31T19:30:00+08:00,Hougang United,Young Lions,Bishan Stadium,League,false,true
+2026-11-01T19:30:00+08:00,Tampines Rovers,Geylang International,OUR TAMPINES HUB,League,false,true
+2026-11-01T19:30:00+08:00,Balestier Khalsa,Lion City Sailors,Bishan Stadium,League,false,true
+2026-11-20T19:30:00+08:00,FC Jurong,Balestier Khalsa,Jurong East Stadium,League,false,true
+2026-11-21T19:30:00+08:00,Young Lions,Tanjong Pagar,Jalan Besar Stadium,League,false,true
+2026-11-22T19:30:00+08:00,Hougang United,Tampines Rovers,Bishan Stadium,League,false,true
+2026-11-22T19:30:00+08:00,Lion City Sailors,Geylang International,Jalan Besar Stadium,League,false,true
+2026-11-27T19:30:00+08:00,Geylang International,Tanjong Pagar,OUR TAMPINES HUB,League,false,true
+2026-11-28T19:30:00+08:00,Balestier Khalsa,Hougang United,Bishan Stadium,League,false,true
+2026-11-29T19:30:00+08:00,Tampines Rovers,FC Jurong,OUR TAMPINES HUB,League,false,true
+2026-11-29T19:30:00+08:00,Young Lions,Lion City Sailors,Jalan Besar Stadium,League,false,true
+2027-02-12T20:30:00+08:00,Tanjong Pagar,Balestier Khalsa,Jurong East Stadium,League,false,true
+2027-02-13T20:30:00+08:00,Hougang United,Geylang International,Bishan Stadium,League,false,true
+2027-02-14T20:30:00+08:00,Tampines Rovers,Young Lions,OUR TAMPINES HUB,League,false,true
+2027-02-14T20:30:00+08:00,Lion City Sailors,FC Jurong,Jalan Besar Stadium,League,false,true
+2027-02-19T20:30:00+08:00,Hougang United,Tanjong Pagar,Bishan Stadium,League,false,true
+2027-02-20T20:30:00+08:00,FC Jurong,Young Lions,Jurong East Stadium,League,false,true
+2027-02-21T20:30:00+08:00,Balestier Khalsa,Lion City Sailors,Bishan Stadium,League,false,true
+2027-02-21T20:30:00+08:00,Geylang International,Tampines Rovers,OUR TAMPINES HUB,League,false,true
+2027-02-26T20:30:00+08:00,FC Jurong,Geylang International,Jurong East Stadium,League,false,true
+2027-02-27T20:30:00+08:00,Young Lions,Balestier Khalsa,Jalan Besar Stadium,League,false,true
+2027-02-28T20:30:00+08:00,Tampines Rovers,Tanjong Pagar,OUR TAMPINES HUB,League,false,true
+2027-02-28T20:30:00+08:00,Lion City Sailors,Hougang United,Jalan Besar Stadium,League,false,true
+2027-03-05T20:30:00+08:00,Balestier Khalsa,Geylang International,Bishan Stadium,League,false,true
+2027-03-06T20:30:00+08:00,Hougang United,FC Jurong,Bishan Stadium,League,false,true
+2027-03-07T20:30:00+08:00,Tanjong Pagar,Young Lions,Jurong East Stadium,League,false,true
+2027-03-07T20:30:00+08:00,Lion City Sailors,Tampines Rovers,Jalan Besar Stadium,League,false,true
+2027-03-12T19:30:00+08:00,FC Jurong,Tanjong Pagar,Jurong East Stadium,League,false,true
+2027-03-13T19:30:00+08:00,Young Lions,Hougang United,Jalan Besar Stadium,League,false,true
+2027-03-14T19:30:00+08:00,Balestier Khalsa,Tampines Rovers,Bishan Stadium,League,false,true
+2027-03-14T19:30:00+08:00,Geylang International,Lion City Sailors,OUR TAMPINES HUB,League,false,true
+2027-03-19T19:30:00+08:00,FC Jurong,Balestier Khalsa,Jurong East Stadium,League,false,true
+2027-03-20T19:30:00+08:00,Geylang International,Young Lions,OUR TAMPINES HUB,League,false,true
+2027-03-21T19:30:00+08:00,Tanjong Pagar,Lion City Sailors,Jurong East Stadium,League,false,true
+2027-03-21T19:30:00+08:00,Tampines Rovers,Hougang United,OUR TAMPINES HUB,League,false,true
+2027-04-02T19:30:00+08:00,Hougang United,FC Jurong,Bishan Stadium,League,false,true
+2027-04-03T19:30:00+08:00,Balestier Khalsa,Young Lions,Bishan Stadium,League,false,true
+2027-04-04T19:30:00+08:00,Lion City Sailors,Geylang International,Jalan Besar Stadium,League,false,true
+2027-04-04T19:30:00+08:00,Tampines Rovers,Tanjong Pagar,OUR TAMPINES HUB,League,false,true
+2027-04-09T19:30:00+08:00,Tanjong Pagar,Hougang United,Jurong East Stadium,League,false,true
+2027-04-10T19:30:00+08:00,Geylang International,Balestier Khalsa,OUR TAMPINES HUB,League,false,true
+2027-04-11T19:30:00+08:00,FC Jurong,Lion City Sailors,Jurong East Stadium,League,false,true
+2027-04-11T19:30:00+08:00,Young Lions,Tampines Rovers,Jalan Besar Stadium,League,false,true
+2027-04-16T19:30:00+08:00,Balestier Khalsa,Tanjong Pagar,Bishan Stadium,League,false,true
+2027-04-17T19:30:00+08:00,Geylang International,Hougang United,OUR TAMPINES HUB,League,false,true
+2027-04-18T19:30:00+08:00,Lion City Sailors,Young Lions,Jalan Besar Stadium,League,false,true
+2027-04-18T19:30:00+08:00,Tampines Rovers,FC Jurong,OUR TAMPINES HUB,League,false,true
+2027-04-24T19:30:00+08:00,Tampines Rovers,Lion City Sailors,OUR TAMPINES HUB,League,false,true
+2027-04-24T19:30:00+08:00,Tanjong Pagar,Geylang International,Jurong East Stadium,League,false,true
+2027-04-25T19:30:00+08:00,Hougang United,Balestier Khalsa,Bishan Stadium,League,false,true
+2027-04-25T19:30:00+08:00,FC Jurong,Young Lions,Jurong East Stadium,League,false,true
+2027-04-30T19:30:00+08:00,Lion City Sailors,Hougang United,Jalan Besar Stadium,League,false,true
+2027-04-30T19:30:00+08:00,Geylang International,Tampines Rovers,OUR TAMPINES HUB,League,false,true
+2027-05-02T19:30:00+08:00,Balestier Khalsa,FC Jurong,Bishan Stadium,League,false,true
+2027-05-02T19:30:00+08:00,Young Lions,Tanjong Pagar,Jalan Besar Stadium,League,false,true
+2027-05-08T19:30:00+08:00,Tanjong Pagar,FC Jurong,Jurong East Stadium,League,false,true
+2027-05-08T19:30:00+08:00,Hougang United,Tampines Rovers,Bishan Stadium,League,false,true
+2027-05-09T19:30:00+08:00,Geylang International,Young Lions,OUR TAMPINES HUB,League,false,true
+2027-05-09T19:30:00+08:00,Lion City Sailors,Balestier Khalsa,Jalan Besar Stadium,League,false,true
+2027-05-14T19:30:00+08:00,FC Jurong,Geylang International,Jurong East Stadium,League,false,true
+2027-05-15T19:30:00+08:00,Tampines Rovers,Balestier Khalsa,OUR TAMPINES HUB,League,false,true
+2027-05-15T19:30:00+08:00,Tanjong Pagar,Lion City Sailors,Jurong East Stadium,League,false,true
+2027-05-16T19:30:00+08:00,Young Lions,Hougang United,Jalan Besar Stadium,League,false,true

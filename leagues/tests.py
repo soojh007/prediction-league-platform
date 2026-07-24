@@ -1,9 +1,11 @@
 from django.contrib.auth.models import User
 from django.core import mail
+from django.core.management import call_command
 from django.test import TestCase
 from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
+from tempfile import NamedTemporaryFile
 
 from .models import Competition, LeagueMembership, Match, OrganiserEnquiry, Prediction, PrivateLeague, Team
 
@@ -448,3 +450,23 @@ class LeagueJoinFlowTests(TestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].to, ['hello@predictionleague.site'])
         self.assertEqual(mail.outbox[0].reply_to, ['soo@example.com'])
+
+    def test_import_custom_fixtures_upserts_csv_rows(self):
+        self.spl.prediction_mode = PrivateLeague.PredictionMode.ALL
+        self.spl.save()
+        home = Team.objects.create(competition=self.spl.competition, name='Lion City Sailors')
+        away = Team.objects.create(competition=self.spl.competition, name='Tampines Rovers')
+
+        with NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as csv_file:
+            csv_file.write(
+                'kickoff_time,home_team,away_team,venue,stage,featured,counts_towards_league\n'
+                '2026-09-11T19:30:00+08:00,Lion City Sailors,Tampines Rovers,Jalan Besar Stadium,League,false,true\n'
+            )
+            csv_path = csv_file.name
+
+        call_command('import_custom_fixtures', csv_path, private_league_slug=self.spl.slug)
+        call_command('import_custom_fixtures', csv_path, private_league_slug=self.spl.slug)
+
+        matches = Match.objects.filter(competition=self.spl.competition, home_team=home, away_team=away)
+        self.assertEqual(matches.count(), 1)
+        self.assertEqual(matches.get().venue, 'Jalan Besar Stadium')
