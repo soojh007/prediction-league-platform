@@ -14,9 +14,9 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: ALLOWED_HOSTS
-        value: ".onrender.com"
+        value: ".onrender.com,.predictionleague.site"
       - key: CSRF_TRUSTED_ORIGINS
-        value: "https://prediction-league.onrender.com"
+        value: "https://prediction-league-b076.onrender.com,https://predictionleague.site,https://*.predictionleague.site"
       - key: SECURE_SSL_REDIRECT
         value: "True"
       - key: SECURE_HSTS_SECONDS
