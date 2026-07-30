@@ -48,3 +48,13 @@ def player_navigation(request):
         'nav_league_count': memberships.count(),
         'nav_host_league': host_league,
     }
+
+
+def analytics(request):
+    from django.conf import settings
+
+    return {
+        'cloudflare_analytics_token': settings.CLOUDFLARE_ANALYTICS_TOKEN,
+        'plausible_domain': settings.PLAUSIBLE_DOMAIN,
+        'plausible_script_src': settings.PLAUSIBLE_SCRIPT_SRC,
+    }

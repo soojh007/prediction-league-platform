@@ -27,6 +27,10 @@ services:
           property: connectionString
       - key: FOOTBALL_API_KEY
         sync: false
+      - key: CLOUDFLARE_ANALYTICS_TOKEN
+        sync: false
+      - key: PLAUSIBLE_DOMAIN
+        sync: false
 
 databases:
   - name: prediction-league-db

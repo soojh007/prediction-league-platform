@@ -429,6 +429,19 @@ class LeagueJoinFlowTests(TestCase):
         self.assertContains(response, 'Enquire')
 
     @override_settings(
+        CLOUDFLARE_ANALYTICS_TOKEN='cf-token',
+        PLAUSIBLE_DOMAIN='predictionleague.site',
+        PLAUSIBLE_SCRIPT_SRC='https://plausible.io/js/script.js',
+    )
+    def test_landing_page_can_include_analytics_snippets(self):
+        response = self.client.get(reverse('home'))
+
+        self.assertContains(response, 'static.cloudflareinsights.com/beacon.min.js')
+        self.assertContains(response, 'data-cf-beacon=\'{"token": "cf-token"}\'')
+        self.assertContains(response, 'data-domain="predictionleague.site"')
+        self.assertContains(response, 'https://plausible.io/js/script.js')
+
+    @override_settings(
         EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
         CONTACT_EMAIL='hello@predictionleague.site',
         DEFAULT_FROM_EMAIL='Prediction League <no-reply@predictionleague.site>',

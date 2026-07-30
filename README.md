@@ -95,6 +95,15 @@ SECURE_SSL_REDIRECT=True
 SECURE_HSTS_SECONDS=31536000
 ```
 
+For privacy-friendly traffic analytics, configure either Cloudflare Web Analytics or Plausible:
+
+```text
+CLOUDFLARE_ANALYTICS_TOKEN=<Cloudflare Web Analytics token>
+PLAUSIBLE_DOMAIN=predictionleague.site
+```
+
+Leave both blank to disable analytics, such as during local development. If you use a self-hosted Plausible instance, also set `PLAUSIBLE_SCRIPT_SRC`.
+
 For password reset emails, also configure SMTP:
 
 ```text

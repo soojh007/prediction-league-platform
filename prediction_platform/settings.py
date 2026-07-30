@@ -89,6 +89,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'leagues.context_processors.player_navigation',
+                'leagues.context_processors.analytics',
             ],
         },
     },
@@ -173,6 +174,9 @@ EMAIL_USE_TLS = env_bool('EMAIL_USE_TLS', True)
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'Prediction League <no-reply@predictionleague.local>')
 CONTACT_EMAIL = os.environ.get('CONTACT_EMAIL', 'hello@predictionleague.site')
 FOOTBALL_API_KEY = os.environ.get('FOOTBALL_API_KEY', '')
+CLOUDFLARE_ANALYTICS_TOKEN = os.environ.get('CLOUDFLARE_ANALYTICS_TOKEN', '')
+PLAUSIBLE_DOMAIN = os.environ.get('PLAUSIBLE_DOMAIN', '')
+PLAUSIBLE_SCRIPT_SRC = os.environ.get('PLAUSIBLE_SCRIPT_SRC', 'https://plausible.io/js/script.js')
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_SSL_REDIRECT = env_bool('SECURE_SSL_REDIRECT', not DEBUG)

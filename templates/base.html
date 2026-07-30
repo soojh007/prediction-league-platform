@@ -6,6 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Prediction League{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'leagues/styles.css' %}?v=20260718-leaderboard-contact">
+    {% if cloudflare_analytics_token %}
+        <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "{{ cloudflare_analytics_token }}"}'></script>
+    {% endif %}
+    {% if plausible_domain %}
+        <script defer data-domain="{{ plausible_domain }}" src="{{ plausible_script_src }}"></script>
+    {% endif %}
 </head>
 <body>
     <nav class="topbar">
