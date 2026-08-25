@@ -14,7 +14,7 @@ from django.utils import timezone
 
 from .forms import AccountForm, CompetitionBrandingForm, FixtureSyncForm, JoinLeagueForm, LeagueSettingsForm, MatchForm, MatchResultForm, OrganiserEnquiryForm, PredictionForm, PrivateLeagueForm, SignUpForm, SupportedTeamForm, TeamForm
 from .models import Competition, LeagueMembership, Match, Prediction, PrivateLeague, Team
-from .services.api_football import ApiFootballError, ApiFootballSyncService
+from .services.sportmonks import SportMonksError, SportMonksSyncService
 
 
 DEFAULT_LEAGUE_NAME = '2026-27 EPL Prediction League'
@@ -455,7 +455,7 @@ def organiser_sync_fixtures(request, pk):
     from_date = form.cleaned_data['from_date']
     to_date = form.cleaned_data['to_date']
     try:
-        service = ApiFootballSyncService()
+        service = SportMonksSyncService()
         team_stats = None
         if form.cleaned_data['sync_teams']:
             team_stats = service.sync_teams(league.competition)
@@ -464,7 +464,7 @@ def organiser_sync_fixtures(request, pk):
             from_date=from_date.isoformat() if from_date else None,
             to_date=to_date.isoformat() if to_date else None,
         )
-    except (ApiFootballError, ImproperlyConfigured) as error:
+    except (SportMonksError, ImproperlyConfigured) as error:
         messages.error(request, f'Fixture sync failed: {error}')
         return redirect('organiser_league_settings', pk=league.pk)
 

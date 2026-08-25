@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.core.exceptions import ImproperlyConfigured
 
-from leagues.services.api_football import ApiFootballError, ApiFootballSyncService, resolve_competition
+from leagues.services.sportmonks import SportMonksError, SportMonksSyncService, resolve_competition
 
 
 class Command(BaseCommand):
@@ -24,7 +24,7 @@ class Command(BaseCommand):
                 competition_id=options.get('competition_id'),
                 private_league_id=options.get('private_league_id'),
             )
-            service = ApiFootballSyncService()
+            service = SportMonksSyncService()
             team_stats = None
             if options['with_teams']:
                 team_stats = service.sync_teams(competition)
@@ -33,7 +33,7 @@ class Command(BaseCommand):
                 from_date=options.get('from_date'),
                 to_date=options.get('to_date'),
             )
-        except (ApiFootballError, ImproperlyConfigured, ValueError) as error:
+        except (SportMonksError, ImproperlyConfigured, ValueError) as error:
             raise CommandError(str(error)) from error
 
         if team_stats is not None:

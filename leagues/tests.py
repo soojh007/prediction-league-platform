@@ -8,6 +8,7 @@ from django.utils import timezone
 from tempfile import NamedTemporaryFile
 
 from .models import Competition, LeagueMembership, Match, OrganiserEnquiry, Prediction, PrivateLeague, Team
+from .services.sportmonks import SportMonksSyncService
 
 
 class LeagueJoinFlowTests(TestCase):
@@ -483,3 +484,77 @@ class LeagueJoinFlowTests(TestCase):
         matches = Match.objects.filter(competition=self.spl.competition, home_team=home, away_team=away)
         self.assertEqual(matches.count(), 1)
         self.assertEqual(matches.get().venue, 'Jalan Besar Stadium')
+
+    def test_sportmonks_sync_imports_teams_and_fixtures(self):
+        self.epl.competition.api_league_id = 23690
+        self.epl.competition.save(update_fields=['api_league_id'])
+
+        class FakeSportMonksClient:
+            def teams(self, season_id):
+                self.season_id = season_id
+                return [
+                    {'id': 1, 'name': 'Arsenal', 'short_code': 'ARS', 'image_path': 'https://example.com/ars.png'},
+                    {'id': 2, 'name': 'Chelsea', 'short_code': 'CHE', 'image_path': 'https://example.com/che.png'},
+                ]
+
+            def fixtures(self, season_id):
+                self.fixture_season_id = season_id
+                return [
+                    {
+                        'id': 9001,
+                        'starting_at': '2026-08-16 19:30:00',
+                        'state_id': 5,
+                        'state': {'short_name': 'FT', 'name': 'Finished'},
+                        'round': {'name': 'Round 1'},
+                        'venue': {'name': 'Emirates Stadium'},
+                        'participants': [
+                            {
+                                'id': 1,
+                                'name': 'Arsenal',
+                                'short_code': 'ARS',
+                                'image_path': 'https://example.com/ars.png',
+                                'meta': {'location': 'home'},
+                            },
+                            {
+                                'id': 2,
+                                'name': 'Chelsea',
+                                'short_code': 'CHE',
+                                'image_path': 'https://example.com/che.png',
+                                'meta': {'location': 'away'},
+                            },
+                        ],
+                        'scores': [
+                            {
+                                'participant_id': 1,
+                                'description': 'CURRENT',
+                                'score': {'goals': 2, 'participant': 'home'},
+                            },
+                            {
+                                'participant_id': 2,
+                                'description': 'CURRENT',
+                                'score': {'goals': 1, 'participant': 'away'},
+                            },
+                        ],
+                    },
+                ]
+
+        client = FakeSportMonksClient()
+        service = SportMonksSyncService(client=client)
+
+        team_stats = service.sync_teams(self.epl.competition)
+        fixture_stats = service.sync_fixtures(self.epl.competition, from_date='2026-08-01', to_date='2026-08-31')
+
+        self.assertEqual(client.season_id, 23690)
+        self.assertEqual(client.fixture_season_id, 23690)
+        self.assertEqual(team_stats, {'checked': 2, 'created': 2, 'updated': 0})
+        self.assertEqual(fixture_stats['checked'], 1)
+        self.assertEqual(fixture_stats['created'], 1)
+
+        match = Match.objects.get(api_fixture_id=9001)
+        self.assertEqual(match.home_team.name, 'Arsenal')
+        self.assertEqual(match.away_team.name, 'Chelsea')
+        self.assertEqual(match.status, Match.Status.FINISHED)
+        self.assertEqual(match.home_score, 2)
+        self.assertEqual(match.away_score, 1)
+        self.assertEqual(match.stage, 'Round 1')
+        self.assertEqual(match.venue, 'Emirates Stadium')

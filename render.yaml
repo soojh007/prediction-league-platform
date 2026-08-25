@@ -25,7 +25,7 @@ services:
         fromDatabase:
           name: prediction-league-db
           property: connectionString
-      - key: FOOTBALL_API_KEY
+      - key: SPORTMONKS_API_TOKEN
         sync: false
       - key: CLOUDFLARE_ANALYTICS_TOKEN
         sync: false

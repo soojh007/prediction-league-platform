@@ -20,7 +20,7 @@ class Command(BaseCommand):
         epl = self.create_competition(
             name='Premier League',
             competition_type=Competition.CompetitionType.API_LEAGUE,
-            api_league_id=39,
+            api_league_id=None,
             season=2026,
             country='England',
             teams=[
