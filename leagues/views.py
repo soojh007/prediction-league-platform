@@ -17,12 +17,11 @@ from .models import Competition, LeagueMembership, Match, Prediction, PrivateLea
 from .services.sportmonks import SportMonksError, SportMonksSyncService
 
 
-DEFAULT_LEAGUE_NAME = '2026-27 EPL Prediction League'
-DEFAULT_LEAGUE_SLUG = 'epl2627'
+DEFAULT_LEAGUE_NAME = '2026-27 SPL Prediction League'
+DEFAULT_LEAGUE_SLUG = 'spl2627'
 TARGET_LEAGUE_SESSION_KEY = 'target_league_slug'
 PLAYER_SESSION_AGE_SECONDS = 60 * 60 * 24 * 365 * 10
 HOST_LEAGUE_SLUGS = {
-    'epl2627': 'epl2627',
     'spl2627': 'spl2627',
 }
 ADMIN_HOST_PREFIXES = {'admin', 'organiser', 'organizer'}
@@ -135,6 +134,7 @@ def home(request):
     available_leagues = (
         PrivateLeague.objects
         .select_related('competition')
+        .filter(competition__active=True)
         .order_by('competition__name', 'name')
     )
     return render(request, 'leagues/home.html', {
@@ -146,6 +146,7 @@ def public_league_landing(request, slug):
     league = get_object_or_404(
         PrivateLeague.objects.select_related('competition'),
         slug=slug,
+        competition__active=True,
     )
     request.session[TARGET_LEAGUE_SESSION_KEY] = league.slug
 
@@ -162,6 +163,7 @@ def league_rules(request, slug):
     league = get_object_or_404(
         PrivateLeague.objects.select_related('competition'),
         slug=slug,
+        competition__active=True,
     )
     is_league_member = (
         request.user.is_authenticated
@@ -252,7 +254,7 @@ def join_public_league(request, slug):
     if request.method != 'POST':
         return redirect('public_league_landing', slug=slug)
 
-    league = get_object_or_404(PrivateLeague, slug=slug)
+    league = get_object_or_404(PrivateLeague, slug=slug, competition__active=True)
     LeagueMembership.objects.get_or_create(league=league, user=request.user)
     request.session.pop(TARGET_LEAGUE_SESSION_KEY, None)
     messages.success(request, f'Joined {league.name}.')
@@ -293,7 +295,12 @@ def get_default_league():
     return (
         PrivateLeague.objects
         .select_related('competition')
-        .filter(slug=DEFAULT_LEAGUE_SLUG, name=DEFAULT_LEAGUE_NAME, competition__name='Premier League')
+        .filter(
+            slug=DEFAULT_LEAGUE_SLUG,
+            name=DEFAULT_LEAGUE_NAME,
+            competition__name='Singapore Premier League',
+            competition__active=True,
+        )
         .order_by('id')
         .first()
     )
@@ -306,7 +313,7 @@ def get_host_league(request):
     return (
         PrivateLeague.objects
         .select_related('competition')
-        .filter(slug=league_slug)
+        .filter(slug=league_slug, competition__active=True)
         .first()
     )
 
@@ -323,7 +330,7 @@ def get_target_league(request):
     return (
         PrivateLeague.objects
         .select_related('competition')
-        .filter(slug=league_slug)
+        .filter(slug=league_slug, competition__active=True)
         .first()
     )
 
@@ -347,6 +354,7 @@ def dashboard(request):
         memberships = (
             LeagueMembership.objects
             .filter(user=request.user)
+            .filter(league__competition__active=True)
             .select_related('league', 'league__competition', 'supported_team')
             .order_by('-joined_at')
         )
@@ -371,7 +379,7 @@ def organiser_leagues(request):
 
     leagues = (
         PrivateLeague.objects
-        .filter(owner=request.user)
+        .filter(owner=request.user, competition__active=True)
         .select_related('competition')
         .annotate(
             player_count=models.Count('memberships', distinct=True),

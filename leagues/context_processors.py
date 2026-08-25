@@ -2,7 +2,6 @@ from .models import LeagueMembership, PrivateLeague
 
 
 HOST_LEAGUE_SLUGS = {
-    'epl2627': 'epl2627',
     'spl2627': 'spl2627',
 }
 
@@ -17,7 +16,7 @@ def get_host_league(request):
     return (
         PrivateLeague.objects
         .select_related('competition')
-        .filter(slug=league_slug)
+        .filter(slug=league_slug, competition__active=True)
         .first()
     )
 
@@ -38,6 +37,7 @@ def player_navigation(request):
     memberships = (
         LeagueMembership.objects
         .filter(user=request.user)
+        .filter(league__competition__active=True)
         .select_related('league')
         .order_by('-joined_at')
     )

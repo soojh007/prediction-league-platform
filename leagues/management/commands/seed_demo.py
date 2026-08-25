@@ -23,6 +23,7 @@ class Command(BaseCommand):
             api_league_id=None,
             season=2026,
             country='England',
+            active=False,
             teams=[
                 ('Arsenal', 'ARS', '#d9293f'),
                 ('Aston Villa', 'AVL', '#6f1d46'),
@@ -127,7 +128,7 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS('Demo data ready. Login with admin / admin123.'))
 
-    def create_competition(self, name, competition_type, season, country, teams, api_league_id=None):
+    def create_competition(self, name, competition_type, season, country, teams, api_league_id=None, active=True):
         competition, _ = Competition.objects.update_or_create(
             name=name,
             season=season,
@@ -135,7 +136,7 @@ class Command(BaseCommand):
                 'competition_type': competition_type,
                 'api_league_id': api_league_id,
                 'country': country,
-                'active': True,
+                'active': active,
             },
         )
         for team_name, short_name, color in teams:
