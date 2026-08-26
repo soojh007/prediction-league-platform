@@ -490,10 +490,20 @@ class LeagueJoinFlowTests(TestCase):
         self.epl.competition.save(update_fields=['api_league_id'])
 
         class FakeSportMonksClient:
-            def season_id_for_league(self, league_id, season_year):
+            def league(self, league_id):
                 self.league_id = league_id
+                return {
+                    'id': league_id,
+                    'name': 'Premier League',
+                    'seasons': [{'id': 23690, 'name': '2026/2027', 'starting_at': '2026-08-01'}],
+                }
+
+            def search_leagues(self, name):
+                return []
+
+            def season_id_for_league_data(self, league_data, season_year):
                 self.season_year = season_year
-                return 23690
+                return league_data['seasons'][0]['id']
 
             def teams(self, season_id):
                 self.season_id = season_id
@@ -565,3 +575,44 @@ class LeagueJoinFlowTests(TestCase):
         self.assertEqual(match.away_score, 1)
         self.assertEqual(match.stage, 'Round 1')
         self.assertEqual(match.venue, 'Emirates Stadium')
+
+    def test_sportmonks_sync_searches_when_stored_league_id_is_wrong(self):
+        self.spl.competition.api_league_id = 505
+        self.spl.competition.country = 'Singapore'
+        self.spl.competition.season = 2026
+        self.spl.competition.save(update_fields=['api_league_id', 'country', 'season'])
+
+        class FakeSportMonksClient:
+            def league(self, league_id):
+                self.initial_league_id = league_id
+                return None
+
+            def search_leagues(self, name):
+                self.search_name = name
+                return [{
+                    'id': 12345,
+                    'name': 'Singapore Premier League',
+                    'country': {'name': 'Singapore'},
+                    'seasons': [{'id': 67890, 'name': '2026/2027', 'starting_at': '2026-09-01'}],
+                }]
+
+            def season_id_for_league_data(self, league_data, season_year):
+                self.season_year = season_year
+                return league_data['seasons'][0]['id']
+
+            def fixtures(self, season_id):
+                self.fixture_season_id = season_id
+                return []
+
+        client = FakeSportMonksClient()
+        service = SportMonksSyncService(client=client)
+
+        stats = service.sync_fixtures(self.spl.competition)
+        self.spl.competition.refresh_from_db()
+
+        self.assertEqual(client.initial_league_id, 505)
+        self.assertEqual(client.search_name, 'Singapore Premier League')
+        self.assertEqual(client.season_year, 2026)
+        self.assertEqual(client.fixture_season_id, 67890)
+        self.assertEqual(self.spl.competition.api_league_id, 12345)
+        self.assertEqual(stats['checked'], 0)

@@ -93,12 +93,16 @@ class SportMonksClient:
             timezone='Asia/Singapore',
         )
 
-    def season_id_for_league(self, league_id, season_year):
+    def league(self, league_id):
         league_data = self.get(f'/leagues/{league_id}', include='seasons')
-        if not league_data:
-            raise SportMonksError(f'SportMonks league {league_id} was not found.')
+        return league_data[0] if league_data else None
 
-        seasons = league_data[0].get('seasons') or []
+    def search_leagues(self, name):
+        search_term = urllib.parse.quote(str(name))
+        return self.get(f'/leagues/search/{search_term}', include='seasons')
+
+    def season_id_for_league_data(self, league_data, season_year):
+        seasons = league_data.get('seasons') or []
         matching_seasons = [
             season
             for season in seasons
@@ -106,7 +110,7 @@ class SportMonksClient:
         ]
         if not matching_seasons:
             raise SportMonksError(
-                f'No SportMonks season matching {season_year} was found for league {league_id}.'
+                f"No SportMonks season matching {season_year} was found for {league_data.get('name', 'this league')}."
             )
 
         matching_seasons.sort(key=lambda season: str(season.get('starting_at') or season.get('name') or ''), reverse=True)
@@ -342,4 +346,39 @@ class SportMonksSyncService:
             raise SportMonksError(f'{competition.name} does not have a SportMonks league ID.')
 
     def _season_id(self, competition):
-        return self.client.season_id_for_league(competition.api_league_id, competition.season)
+        league_data = self.client.league(competition.api_league_id)
+        if league_data is None:
+            league_data = self._find_league_by_name(competition)
+        return self.client.season_id_for_league_data(league_data, competition.season)
+
+    def _find_league_by_name(self, competition):
+        matches = self.client.search_leagues(competition.name)
+        candidates = [
+            league
+            for league in matches
+            if self._league_matches_competition(league, competition)
+        ]
+        if not candidates:
+            raise SportMonksError(
+                f'SportMonks league {competition.api_league_id} was not found, '
+                f'and no match for {competition.name} was found by search.'
+            )
+
+        league_data = candidates[0]
+        if competition.api_league_id != league_data.get('id'):
+            competition.api_league_id = league_data.get('id')
+            competition.save(update_fields=['api_league_id'])
+        return league_data
+
+    def _league_matches_competition(self, league_data, competition):
+        league_name = str(league_data.get('name') or '').lower()
+        competition_name = competition.name.lower()
+        if competition_name not in league_name and league_name not in competition_name:
+            return False
+
+        country = str(competition.country or '').lower()
+        country_data = league_data.get('country') or {}
+        country_name = str(country_data.get('name') or '').lower()
+        if country and country_name and country not in country_name:
+            return False
+        return True
