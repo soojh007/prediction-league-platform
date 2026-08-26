@@ -93,6 +93,35 @@ class SportMonksClient:
             timezone='Asia/Singapore',
         )
 
+    def season_id_for_league(self, league_id, season_year):
+        league_data = self.get(f'/leagues/{league_id}', include='seasons')
+        if not league_data:
+            raise SportMonksError(f'SportMonks league {league_id} was not found.')
+
+        seasons = league_data[0].get('seasons') or []
+        matching_seasons = [
+            season
+            for season in seasons
+            if self._season_matches_year(season, season_year)
+        ]
+        if not matching_seasons:
+            raise SportMonksError(
+                f'No SportMonks season matching {season_year} was found for league {league_id}.'
+            )
+
+        matching_seasons.sort(key=lambda season: str(season.get('starting_at') or season.get('name') or ''), reverse=True)
+        return matching_seasons[0]['id']
+
+    def _season_matches_year(self, season, season_year):
+        year_text = str(season_year)
+        if str(season.get('id')) == year_text:
+            return True
+        if year_text in str(season.get('name') or ''):
+            return True
+        if str(season.get('starting_at') or '').startswith(year_text):
+            return True
+        return False
+
 
 def resolve_competition(*, competition_id=None, private_league_id=None):
     if private_league_id:
@@ -111,7 +140,8 @@ class SportMonksSyncService:
         self._require_api_competition(competition)
         stats = {'checked': 0, 'created': 0, 'updated': 0}
 
-        for team_data in self.client.teams(competition.api_league_id):
+        season_id = self._season_id(competition)
+        for team_data in self.client.teams(season_id):
             stats['checked'] += 1
             api_team_id = team_data.get('id')
             name = team_data.get('name')
@@ -148,6 +178,7 @@ class SportMonksSyncService:
 
     def sync_fixtures(self, competition, *, from_date=None, to_date=None):
         self._require_api_competition(competition)
+        season_id = self._season_id(competition)
         stats = {
             'checked': 0,
             'created': 0,
@@ -157,7 +188,7 @@ class SportMonksSyncService:
             'finished_match_ids': [],
         }
 
-        for item in self.client.fixtures(competition.api_league_id):
+        for item in self.client.fixtures(season_id):
             kickoff = self._parse_kickoff(item.get('starting_at'))
             if not kickoff or not self._within_dates(kickoff, from_date, to_date):
                 continue
@@ -308,4 +339,7 @@ class SportMonksSyncService:
 
     def _require_api_competition(self, competition):
         if not competition.api_league_id:
-            raise SportMonksError(f'{competition.name} does not have a SportMonks season ID.')
+            raise SportMonksError(f'{competition.name} does not have a SportMonks league ID.')
+
+    def _season_id(self, competition):
+        return self.client.season_id_for_league(competition.api_league_id, competition.season)

@@ -490,6 +490,11 @@ class LeagueJoinFlowTests(TestCase):
         self.epl.competition.save(update_fields=['api_league_id'])
 
         class FakeSportMonksClient:
+            def season_id_for_league(self, league_id, season_year):
+                self.league_id = league_id
+                self.season_year = season_year
+                return 23690
+
             def teams(self, season_id):
                 self.season_id = season_id
                 return [
@@ -544,6 +549,8 @@ class LeagueJoinFlowTests(TestCase):
         team_stats = service.sync_teams(self.epl.competition)
         fixture_stats = service.sync_fixtures(self.epl.competition, from_date='2026-08-01', to_date='2026-08-31')
 
+        self.assertEqual(client.league_id, 23690)
+        self.assertEqual(client.season_year, 2026)
         self.assertEqual(client.season_id, 23690)
         self.assertEqual(client.fixture_season_id, 23690)
         self.assertEqual(team_stats, {'checked': 2, 'created': 2, 'updated': 0})
