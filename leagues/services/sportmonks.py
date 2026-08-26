@@ -352,16 +352,30 @@ class SportMonksSyncService:
         return self.client.season_id_for_league_data(league_data, competition.season)
 
     def _find_league_by_name(self, competition):
-        matches = self.client.search_leagues(competition.name)
+        matches = []
+        seen_ids = set()
+        for search_term in self._league_search_terms(competition):
+            for league in self.client.search_leagues(search_term):
+                league_id = league.get('id')
+                if league_id in seen_ids:
+                    continue
+                seen_ids.add(league_id)
+                matches.append(league)
+
         candidates = [
             league
             for league in matches
             if self._league_matches_competition(league, competition)
         ]
         if not candidates:
+            found_names = ', '.join(
+                f"{league.get('name', 'Unnamed')} ({(league.get('country') or {}).get('name', 'unknown country')})"
+                for league in matches[:8]
+            ) or 'no search results'
             raise SportMonksError(
                 f'SportMonks league {competition.api_league_id} was not found, '
-                f'and no match for {competition.name} was found by search.'
+                f'and no match for {competition.name} was found by search. '
+                f'Found: {found_names}.'
             )
 
         league_data = candidates[0]
@@ -370,10 +384,34 @@ class SportMonksSyncService:
             competition.save(update_fields=['api_league_id'])
         return league_data
 
+    def _league_search_terms(self, competition):
+        terms = [competition.name]
+        if competition.name == 'Singapore Premier League':
+            terms.extend([
+                'Singapore',
+                'Premier League Singapore',
+                'S League',
+                'S.League',
+                'SPL',
+            ])
+        if competition.country:
+            terms.append(competition.country)
+        return [term for index, term in enumerate(terms) if term and term not in terms[:index]]
+
     def _league_matches_competition(self, league_data, competition):
         league_name = str(league_data.get('name') or '').lower()
         competition_name = competition.name.lower()
-        if competition_name not in league_name and league_name not in competition_name:
+        aliases = [competition_name]
+        if competition.name == 'Singapore Premier League':
+            aliases.extend([
+                'singapore premier league',
+                'premier league singapore',
+                's league',
+                's.league',
+                'spl',
+            ])
+
+        if not any(alias in league_name or league_name in alias for alias in aliases):
             return False
 
         country = str(competition.country or '').lower()

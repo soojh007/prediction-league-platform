@@ -583,12 +583,15 @@ class LeagueJoinFlowTests(TestCase):
         self.spl.competition.save(update_fields=['api_league_id', 'country', 'season'])
 
         class FakeSportMonksClient:
+            def __init__(self):
+                self.search_terms = []
+
             def league(self, league_id):
                 self.initial_league_id = league_id
                 return None
 
             def search_leagues(self, name):
-                self.search_name = name
+                self.search_terms.append(name)
                 return [{
                     'id': 12345,
                     'name': 'Singapore Premier League',
@@ -611,8 +614,50 @@ class LeagueJoinFlowTests(TestCase):
         self.spl.competition.refresh_from_db()
 
         self.assertEqual(client.initial_league_id, 505)
-        self.assertEqual(client.search_name, 'Singapore Premier League')
+        self.assertIn('Singapore Premier League', client.search_terms)
         self.assertEqual(client.season_year, 2026)
         self.assertEqual(client.fixture_season_id, 67890)
         self.assertEqual(self.spl.competition.api_league_id, 12345)
         self.assertEqual(stats['checked'], 0)
+
+    def test_sportmonks_sync_accepts_spl_alias_search_result(self):
+        self.spl.competition.api_league_id = 505
+        self.spl.competition.country = 'Singapore'
+        self.spl.competition.season = 2026
+        self.spl.competition.save(update_fields=['api_league_id', 'country', 'season'])
+
+        class FakeSportMonksClient:
+            def __init__(self):
+                self.search_terms = []
+
+            def league(self, league_id):
+                return None
+
+            def search_leagues(self, name):
+                self.search_terms.append(name)
+                if name == 'S League':
+                    return [{
+                        'id': 24680,
+                        'name': 'S.League',
+                        'country': {'name': 'Singapore'},
+                        'seasons': [{'id': 13579, 'name': '2026', 'starting_at': '2026-09-01'}],
+                    }]
+                return []
+
+            def season_id_for_league_data(self, league_data, season_year):
+                return league_data['seasons'][0]['id']
+
+            def fixtures(self, season_id):
+                self.fixture_season_id = season_id
+                return []
+
+        client = FakeSportMonksClient()
+        service = SportMonksSyncService(client=client)
+
+        service.sync_fixtures(self.spl.competition)
+        self.spl.competition.refresh_from_db()
+
+        self.assertIn('Singapore Premier League', client.search_terms)
+        self.assertIn('S League', client.search_terms)
+        self.assertEqual(client.fixture_season_id, 13579)
+        self.assertEqual(self.spl.competition.api_league_id, 24680)
