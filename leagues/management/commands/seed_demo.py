@@ -38,7 +38,8 @@ class Command(BaseCommand):
 
         spl = self.create_competition(
             name='Singapore Premier League',
-            competition_type=Competition.CompetitionType.CUSTOM,
+            competition_type=Competition.CompetitionType.API_LEAGUE,
+            api_league_id=1357,
             season=2026,
             country='Singapore',
             teams=[
