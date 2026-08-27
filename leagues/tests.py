@@ -1,3 +1,4 @@
+from datetime import datetime, timezone as datetime_timezone
 from django.contrib.auth.models import User
 from django.core import mail
 from django.core.management import call_command
@@ -624,6 +625,59 @@ class LeagueJoinFlowTests(TestCase):
         self.assertEqual(fixtures[0]['id'], 9001)
         self.assertEqual(fixtures[0]['stage']['name'], 'Regular Season')
         self.assertEqual(fixtures[0]['round']['name'], 'Round 1')
+
+    def test_sportmonks_sync_attaches_api_id_to_manual_fixture_on_same_local_date(self):
+        self.spl.competition.api_league_id = 1357
+        self.spl.competition.api_season_id = 28091
+        self.spl.competition.save(update_fields=['api_league_id', 'api_season_id'])
+        home = Team.objects.create(competition=self.spl.competition, name='Tampines Rovers')
+        away = Team.objects.create(competition=self.spl.competition, name='Balestier Khalsa')
+        manual_match = Match.objects.create(
+            competition=self.spl.competition,
+            home_team=home,
+            away_team=away,
+            kickoff_time=datetime(2026, 9, 11, 11, 30, tzinfo=datetime_timezone.utc),
+            stage='League',
+            venue='OUR TAMPINES HUB',
+        )
+
+        class FakeSportMonksClient:
+            def fixtures(self, season_id):
+                self.fixture_season_id = season_id
+                return [{
+                    'id': 19778330,
+                    'starting_at': '2026-09-11 03:30:00+00:00',
+                    'state': {'short_name': 'NS', 'name': 'Not Started'},
+                    'round': {'name': '1'},
+                    'participants': [
+                        {
+                            'id': 501,
+                            'name': 'Tampines Rovers',
+                            'short_code': 'TAM',
+                            'meta': {'location': 'home'},
+                        },
+                        {
+                            'id': 502,
+                            'name': 'Balestier Khalsa',
+                            'short_code': 'BAL',
+                            'meta': {'location': 'away'},
+                        },
+                    ],
+                    'scores': [],
+                }]
+
+        service = SportMonksSyncService(client=FakeSportMonksClient())
+        stats = service.sync_fixtures(self.spl.competition)
+        manual_match.refresh_from_db()
+
+        self.assertEqual(stats['checked'], 1)
+        self.assertEqual(stats['created'], 0)
+        self.assertEqual(stats['updated'], 1)
+        self.assertEqual(Match.objects.filter(competition=self.spl.competition).count(), 1)
+        self.assertEqual(manual_match.api_fixture_id, 19778330)
+        self.assertEqual(manual_match.kickoff_time, datetime(2026, 9, 11, 11, 30, tzinfo=datetime_timezone.utc))
+        self.assertEqual(manual_match.stage, 'League')
+        self.assertEqual(manual_match.venue, 'OUR TAMPINES HUB')
 
     def test_sportmonks_sync_searches_when_stored_league_id_is_wrong(self):
         self.spl.competition.api_league_id = 505

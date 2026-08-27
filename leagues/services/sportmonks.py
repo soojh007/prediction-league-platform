@@ -266,10 +266,35 @@ class SportMonksSyncService:
                 'away_score': away_score if is_finished else None,
             }
 
-            match, created = Match.objects.update_or_create(
-                api_fixture_id=fixture_id,
-                defaults=defaults,
-            )
+            match = Match.objects.filter(api_fixture_id=fixture_id).first()
+            if match is not None:
+                created = False
+                for field, value in defaults.items():
+                    setattr(match, field, value)
+                match.save()
+            else:
+                match = self._find_manual_match_for_api_fixture(
+                    competition=competition,
+                    home_team=home_team,
+                    away_team=away_team,
+                    kickoff=kickoff,
+                )
+                if match is not None:
+                    created = False
+                    self._attach_api_fixture_to_manual_match(
+                        match=match,
+                        fixture_id=fixture_id,
+                        is_finished=is_finished,
+                        home_score=home_score,
+                        away_score=away_score,
+                        stage=defaults['stage'],
+                    )
+                else:
+                    match = Match.objects.create(
+                        api_fixture_id=fixture_id,
+                        **defaults,
+                    )
+                    created = True
             stats['match_ids'].append(match.id)
             if is_finished:
                 stats['finished_match_ids'].append(match.id)
@@ -279,6 +304,28 @@ class SportMonksSyncService:
                 stats['updated'] += 1
 
         return stats
+
+    def _find_manual_match_for_api_fixture(self, *, competition, home_team, away_team, kickoff):
+        api_match_date = timezone.localtime(kickoff).date()
+        for match in Match.objects.filter(
+            competition=competition,
+            home_team=home_team,
+            away_team=away_team,
+            api_fixture_id__isnull=True,
+        ):
+            if timezone.localtime(match.kickoff_time).date() == api_match_date:
+                return match
+        return None
+
+    def _attach_api_fixture_to_manual_match(self, *, match, fixture_id, is_finished, home_score, away_score, stage):
+        match.api_fixture_id = fixture_id
+        if is_finished:
+            match.status = Match.Status.FINISHED
+            match.home_score = home_score
+            match.away_score = away_score
+        if not match.stage and stage:
+            match.stage = stage
+        match.save(update_fields=['api_fixture_id', 'status', 'home_score', 'away_score', 'stage'])
 
     def _upsert_fixture_team(self, competition, team_data):
         api_team_id = team_data.get('id')
