@@ -40,6 +40,7 @@ class Command(BaseCommand):
             name='Singapore Premier League',
             competition_type=Competition.CompetitionType.API_LEAGUE,
             api_league_id=1357,
+            api_season_id=28091,
             season=2026,
             country='Singapore',
             teams=[
@@ -129,13 +130,14 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS('Demo data ready. Login with admin / admin123.'))
 
-    def create_competition(self, name, competition_type, season, country, teams, api_league_id=None, active=True):
+    def create_competition(self, name, competition_type, season, country, teams, api_league_id=None, api_season_id=None, active=True):
         competition, _ = Competition.objects.update_or_create(
             name=name,
             season=season,
             defaults={
                 'competition_type': competition_type,
                 'api_league_id': api_league_id,
+                'api_season_id': api_season_id,
                 'country': country,
                 'active': active,
             },

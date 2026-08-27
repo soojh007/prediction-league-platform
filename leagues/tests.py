@@ -8,7 +8,7 @@ from django.utils import timezone
 from tempfile import NamedTemporaryFile
 
 from .models import Competition, LeagueMembership, Match, OrganiserEnquiry, Prediction, PrivateLeague, Team
-from .services.sportmonks import SportMonksSyncService
+from .services.sportmonks import SportMonksClient, SportMonksSyncService
 
 
 class LeagueJoinFlowTests(TestCase):
@@ -575,6 +575,55 @@ class LeagueJoinFlowTests(TestCase):
         self.assertEqual(match.away_score, 1)
         self.assertEqual(match.stage, 'Round 1')
         self.assertEqual(match.venue, 'Emirates Stadium')
+
+    def test_sportmonks_sync_uses_configured_season_id_directly(self):
+        self.spl.competition.api_league_id = 1357
+        self.spl.competition.api_season_id = 28091
+        self.spl.competition.save(update_fields=['api_league_id', 'api_season_id'])
+
+        class FakeSportMonksClient:
+            def league(self, league_id):
+                raise AssertionError('league lookup should not run when api_season_id is configured')
+
+            def teams(self, season_id):
+                self.team_season_id = season_id
+                return []
+
+            def fixtures(self, season_id):
+                self.fixture_season_id = season_id
+                return []
+
+        client = FakeSportMonksClient()
+        service = SportMonksSyncService(client=client)
+
+        service.sync_teams(self.spl.competition)
+        service.sync_fixtures(self.spl.competition)
+
+        self.assertEqual(client.team_season_id, 28091)
+        self.assertEqual(client.fixture_season_id, 28091)
+
+    def test_sportmonks_client_flattens_schedule_fixtures(self):
+        client = SportMonksClient(api_token='test-token')
+        schedule = [{
+            'id': 1,
+            'name': 'Regular Season',
+            'rounds': [{
+                'id': 10,
+                'name': 'Round 1',
+                'fixtures': [{
+                    'id': 9001,
+                    'starting_at': '2026-09-11 19:30:00',
+                    'participants': [],
+                }],
+            }],
+        }]
+
+        fixtures = client._extract_schedule_fixtures(schedule)
+
+        self.assertEqual(len(fixtures), 1)
+        self.assertEqual(fixtures[0]['id'], 9001)
+        self.assertEqual(fixtures[0]['stage']['name'], 'Regular Season')
+        self.assertEqual(fixtures[0]['round']['name'], 'Round 1')
 
     def test_sportmonks_sync_searches_when_stored_league_id_is_wrong(self):
         self.spl.competition.api_league_id = 505

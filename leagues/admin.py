@@ -9,7 +9,7 @@ class TeamInline(admin.TabularInline):
 
 @admin.register(Competition)
 class CompetitionAdmin(admin.ModelAdmin):
-    list_display = ('name', 'season', 'api_league_id', 'competition_type', 'country', 'active')
+    list_display = ('name', 'season', 'api_league_id', 'api_season_id', 'competition_type', 'country', 'active')
     list_filter = ('competition_type', 'active')
     search_fields = ('name', 'country')
     inlines = [TeamInline]

@@ -87,11 +87,56 @@ class SportMonksClient:
         return self.get(f'/teams/seasons/{season_id}')
 
     def fixtures(self, season_id):
-        return self.get(
-            f'/fixtures/seasons/{season_id}',
-            include='participants;scores;league;round;stage;venue;state',
-            timezone='Asia/Singapore',
-        )
+        schedule = self.get(f'/schedules/seasons/{season_id}')
+        return self._extract_schedule_fixtures(schedule)
+
+    def _extract_schedule_fixtures(self, schedule):
+        fixtures = []
+
+        def walk(node, stage=None, round_data=None):
+            if isinstance(node, list):
+                for item in node:
+                    walk(item, stage=stage, round_data=round_data)
+                return
+
+            if not isinstance(node, dict):
+                return
+
+            next_stage = stage
+            next_round = round_data
+            if self._looks_like_stage(node):
+                next_stage = self._lightweight_relation(node)
+            if self._looks_like_round(node):
+                next_round = self._lightweight_relation(node)
+
+            if self._looks_like_fixture(node):
+                fixture = dict(node)
+                fixture.setdefault('stage', next_stage)
+                fixture.setdefault('round', next_round)
+                fixtures.append(fixture)
+                return
+
+            for value in node.values():
+                walk(value, stage=next_stage, round_data=next_round)
+
+        walk(schedule)
+        return fixtures
+
+    def _looks_like_fixture(self, node):
+        return bool(node.get('id') and node.get('starting_at') and 'participants' in node)
+
+    def _looks_like_stage(self, node):
+        return 'rounds' in node and bool(node.get('name'))
+
+    def _looks_like_round(self, node):
+        return 'fixtures' in node and bool(node.get('name'))
+
+    def _lightweight_relation(self, node):
+        return {
+            key: node.get(key)
+            for key in ('id', 'name')
+            if node.get(key) is not None
+        }
 
     def league(self, league_id):
         league_data = self.get(f'/leagues/{league_id}', include='seasons')
@@ -346,10 +391,16 @@ class SportMonksSyncService:
             raise SportMonksError(f'{competition.name} does not have a SportMonks league ID.')
 
     def _season_id(self, competition):
+        if competition.api_season_id:
+            return competition.api_season_id
+
         league_data = self.client.league(competition.api_league_id)
         if league_data is None:
             league_data = self._find_league_by_name(competition)
-        return self.client.season_id_for_league_data(league_data, competition.season)
+        season_id = self.client.season_id_for_league_data(league_data, competition.season)
+        competition.api_season_id = season_id
+        competition.save(update_fields=['api_season_id'])
+        return season_id
 
     def _find_league_by_name(self, competition):
         matches = []

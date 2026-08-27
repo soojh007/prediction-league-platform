@@ -17,6 +17,7 @@ class Competition(models.Model):
         default=CompetitionType.API_LEAGUE,
     )
     api_league_id = models.IntegerField(null=True, blank=True)
+    api_season_id = models.IntegerField(null=True, blank=True)
     logo_url = models.URLField(blank=True)
     season = models.IntegerField(default=2026)
     country = models.CharField(max_length=100, blank=True)

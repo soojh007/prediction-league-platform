@@ -117,15 +117,17 @@ class LeagueSettingsForm(forms.ModelForm):
 class CompetitionBrandingForm(forms.ModelForm):
     class Meta:
         model = Competition
-        fields = ('logo_url', 'api_league_id', 'season')
+        fields = ('logo_url', 'api_league_id', 'api_season_id', 'season')
         labels = {
             'logo_url': 'League logo URL',
-            'api_league_id': 'SportMonks season ID',
+            'api_league_id': 'SportMonks league ID',
+            'api_season_id': 'SportMonks season ID',
             'season': 'Display season',
         }
         widgets = {
             'logo_url': forms.URLInput(attrs={'placeholder': 'https://.../league-logo.png'}),
-            'api_league_id': forms.NumberInput(attrs={'placeholder': '23690'}),
+            'api_league_id': forms.NumberInput(attrs={'placeholder': '1357'}),
+            'api_season_id': forms.NumberInput(attrs={'placeholder': '28091'}),
             'season': forms.NumberInput(attrs={'min': 2000, 'max': 2100}),
         }
 
