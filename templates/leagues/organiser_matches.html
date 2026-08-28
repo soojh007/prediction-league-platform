@@ -38,7 +38,7 @@
                     </strong>
                     <span>
                         {{ match.kickoff_time|date:"d M, g:i a" }}
-                        {% if match.stage %} · {{ match.stage }}{% endif %}
+                        {% if match.stage and match.stage != "League" %} · Match day {{ match.stage }}{% endif %}
                         {% if match.venue %} · {{ match.venue }}{% endif %}
                     </span>
                 </div>

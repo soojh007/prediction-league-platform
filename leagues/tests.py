@@ -1,4 +1,5 @@
 from datetime import datetime, timezone as datetime_timezone
+from io import StringIO
 from django.contrib.auth.models import User
 from django.core import mail
 from django.core.management import call_command
@@ -764,3 +765,85 @@ class LeagueJoinFlowTests(TestCase):
         self.assertIn('S League', client.search_terms)
         self.assertEqual(client.fixture_season_id, 13579)
         self.assertEqual(self.spl.competition.api_league_id, 24680)
+
+    def test_merge_api_fixture_duplicates_dry_run_keeps_rows_unchanged(self):
+        home = Team.objects.create(competition=self.spl.competition, name='Tampines Rovers', api_team_id=8105)
+        away = Team.objects.create(competition=self.spl.competition, name='Balestier Khalsa', api_team_id=8095)
+        Match.objects.create(
+            competition=self.spl.competition,
+            home_team=home,
+            away_team=away,
+            kickoff_time=datetime(2026, 9, 11, 11, 30, tzinfo=datetime_timezone.utc),
+            stage='League',
+            venue='OUR TAMPINES HUB',
+        )
+        Match.objects.create(
+            competition=self.spl.competition,
+            api_fixture_id=19778330,
+            home_team=home,
+            away_team=away,
+            kickoff_time=datetime(2026, 9, 11, 3, 30, tzinfo=datetime_timezone.utc),
+            stage='1',
+        )
+
+        out = StringIO()
+        call_command(
+            'merge_api_fixture_duplicates',
+            competition_id=self.spl.competition.id,
+            stdout=out,
+        )
+
+        self.assertIn('Dry run only', out.getvalue())
+        self.assertEqual(Match.objects.filter(competition=self.spl.competition).count(), 2)
+        self.assertTrue(Match.objects.filter(api_fixture_id=19778330, stage='1').exists())
+
+    def test_merge_api_fixture_duplicates_keeps_manual_details_and_attaches_api_id(self):
+        home = Team.objects.create(competition=self.spl.competition, name='Tampines Rovers', api_team_id=8105)
+        away = Team.objects.create(competition=self.spl.competition, name='Balestier Khalsa', api_team_id=8095)
+        manual_match = Match.objects.create(
+            competition=self.spl.competition,
+            home_team=home,
+            away_team=away,
+            kickoff_time=datetime(2026, 9, 11, 11, 30, tzinfo=datetime_timezone.utc),
+            stage='League',
+            venue='OUR TAMPINES HUB',
+        )
+        Match.objects.create(
+            competition=self.spl.competition,
+            api_fixture_id=19778330,
+            home_team=home,
+            away_team=away,
+            kickoff_time=datetime(2026, 9, 11, 3, 30, tzinfo=datetime_timezone.utc),
+            stage='1',
+            status=Match.Status.FINISHED,
+            home_score=2,
+            away_score=1,
+        )
+        prediction = Prediction.objects.create(
+            user=self.player,
+            league=self.spl,
+            match=manual_match,
+            predicted_home_score=2,
+            predicted_away_score=1,
+        )
+
+        out = StringIO()
+        call_command(
+            'merge_api_fixture_duplicates',
+            competition_id=self.spl.competition.id,
+            apply=True,
+            stdout=out,
+        )
+        manual_match.refresh_from_db()
+        prediction.refresh_from_db()
+
+        self.assertIn('Merged 1 duplicate fixture', out.getvalue())
+        self.assertEqual(Match.objects.filter(competition=self.spl.competition).count(), 1)
+        self.assertEqual(manual_match.api_fixture_id, 19778330)
+        self.assertEqual(manual_match.kickoff_time, datetime(2026, 9, 11, 11, 30, tzinfo=datetime_timezone.utc))
+        self.assertEqual(manual_match.stage, 'League')
+        self.assertEqual(manual_match.venue, 'OUR TAMPINES HUB')
+        self.assertEqual(manual_match.status, Match.Status.FINISHED)
+        self.assertEqual(manual_match.home_score, 2)
+        self.assertEqual(manual_match.away_score, 1)
+        self.assertEqual(prediction.points, 7)
