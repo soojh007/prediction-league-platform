@@ -138,7 +138,7 @@ class Command(BaseCommand):
             manual_match.away_score = api_away_score
             update_fields.extend(['status', 'home_score', 'away_score'])
 
-        if not manual_match.stage and api_stage:
+        if api_stage and (not manual_match.stage or manual_match.stage == 'League'):
             manual_match.stage = api_stage
             update_fields.append('stage')
 

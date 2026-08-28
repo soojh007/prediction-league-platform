@@ -269,9 +269,7 @@ class SportMonksSyncService:
             match = Match.objects.filter(api_fixture_id=fixture_id).first()
             if match is not None:
                 created = False
-                for field, value in defaults.items():
-                    setattr(match, field, value)
-                match.save()
+                self._update_api_linked_match(match=match, defaults=defaults, is_finished=is_finished)
             else:
                 match = self._find_manual_match_for_api_fixture(
                     competition=competition,
@@ -317,15 +315,37 @@ class SportMonksSyncService:
                 return match
         return None
 
+    def _update_api_linked_match(self, *, match, defaults, is_finished):
+        update_fields = ['competition', 'home_team', 'away_team', 'status', 'home_score', 'away_score']
+        match.competition = defaults['competition']
+        match.home_team = defaults['home_team']
+        match.away_team = defaults['away_team']
+        match.status = defaults['status']
+        match.home_score = defaults['home_score'] if is_finished else None
+        match.away_score = defaults['away_score'] if is_finished else None
+
+        if self._should_replace_stage(match.stage, defaults['stage']):
+            match.stage = defaults['stage']
+            update_fields.append('stage')
+
+        if not match.venue and defaults['venue']:
+            match.venue = defaults['venue']
+            update_fields.append('venue')
+
+        match.save(update_fields=update_fields)
+
     def _attach_api_fixture_to_manual_match(self, *, match, fixture_id, is_finished, home_score, away_score, stage):
         match.api_fixture_id = fixture_id
         if is_finished:
             match.status = Match.Status.FINISHED
             match.home_score = home_score
             match.away_score = away_score
-        if not match.stage and stage:
+        if self._should_replace_stage(match.stage, stage):
             match.stage = stage
         match.save(update_fields=['api_fixture_id', 'status', 'home_score', 'away_score', 'stage'])
+
+    def _should_replace_stage(self, current_stage, api_stage):
+        return bool(api_stage) and (not current_stage or current_stage == 'League')
 
     def _upsert_fixture_team(self, competition, team_data):
         api_team_id = team_data.get('id')

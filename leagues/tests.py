@@ -677,7 +677,16 @@ class LeagueJoinFlowTests(TestCase):
         self.assertEqual(Match.objects.filter(competition=self.spl.competition).count(), 1)
         self.assertEqual(manual_match.api_fixture_id, 19778330)
         self.assertEqual(manual_match.kickoff_time, datetime(2026, 9, 11, 11, 30, tzinfo=datetime_timezone.utc))
-        self.assertEqual(manual_match.stage, 'League')
+        self.assertEqual(manual_match.stage, '1')
+        self.assertEqual(manual_match.venue, 'OUR TAMPINES HUB')
+
+        stats = service.sync_fixtures(self.spl.competition)
+        manual_match.refresh_from_db()
+
+        self.assertEqual(stats['created'], 0)
+        self.assertEqual(stats['updated'], 1)
+        self.assertEqual(Match.objects.filter(competition=self.spl.competition).count(), 1)
+        self.assertEqual(manual_match.kickoff_time, datetime(2026, 9, 11, 11, 30, tzinfo=datetime_timezone.utc))
         self.assertEqual(manual_match.venue, 'OUR TAMPINES HUB')
 
     def test_sportmonks_sync_searches_when_stored_league_id_is_wrong(self):
@@ -841,7 +850,7 @@ class LeagueJoinFlowTests(TestCase):
         self.assertEqual(Match.objects.filter(competition=self.spl.competition).count(), 1)
         self.assertEqual(manual_match.api_fixture_id, 19778330)
         self.assertEqual(manual_match.kickoff_time, datetime(2026, 9, 11, 11, 30, tzinfo=datetime_timezone.utc))
-        self.assertEqual(manual_match.stage, 'League')
+        self.assertEqual(manual_match.stage, '1')
         self.assertEqual(manual_match.venue, 'OUR TAMPINES HUB')
         self.assertEqual(manual_match.status, Match.Status.FINISHED)
         self.assertEqual(manual_match.home_score, 2)
