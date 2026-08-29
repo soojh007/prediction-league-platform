@@ -1342,7 +1342,7 @@ def build_league_status(user, league, matches, predictions, leaderboard):
 
 def build_matchdays(matches, open_match_limit=None):
     grouped = []
-    current_date = None
+    current_key = None
     current_group = None
     visible_open_matches = 0
 
@@ -1350,25 +1350,32 @@ def build_matchdays(matches, open_match_limit=None):
         match.deadline_label = match_deadline_label(match)
         match.is_locked = is_match_locked(match)
         match_date = timezone.localtime(match.kickoff_time).date()
-        if match_date != current_date:
-            current_date = match_date
+        group_key, group_title = matchday_group_label(match, match_date)
+        if group_key != current_key:
+            current_key = group_key
             current_group = {
                 'date': match_date,
+                'title': group_title,
                 'matches': [],
-                'collapsed': False,
+                'collapsed': bool(open_match_limit is not None and visible_open_matches >= open_match_limit),
             }
             grouped.append(current_group)
 
         if open_match_limit is not None and not match.is_locked:
-            if visible_open_matches >= open_match_limit:
-                current_group['collapsed'] = True
             visible_open_matches += 1
-        elif open_match_limit is not None and match.is_locked:
-            current_group['collapsed'] = True
 
         current_group['matches'].append(match)
 
     return grouped
+
+
+def matchday_group_label(match, match_date):
+    stage = (match.stage or '').strip()
+    if stage and stage != 'League':
+        if stage.isdigit():
+            return ('stage', stage), f'Match day {stage}'
+        return ('stage', stage), stage
+    return ('date', match_date), match_date.strftime('%a, %d %b')
 
 
 def recalculate_match_points(league, match):

@@ -105,7 +105,7 @@
             {% for matchday in matchdays %}
                 <details class="matchday-group" {% if not matchday.collapsed %}open{% endif %}>
                     <summary class="matchday-heading">
-                        <h3>{{ matchday.date|date:"D, d M" }}</h3>
+                        <h3>{{ matchday.title }}</h3>
                         <span>{{ matchday.matches|length }} match{{ matchday.matches|length|pluralize:"es" }}</span>
                     </summary>
 
@@ -121,8 +121,7 @@
                                         {{ match.away_team.name }}
                                     </strong>
                                     <span class="match-meta">
-                                        {{ match.kickoff_time|date:"g:i a" }}
-                                        {% if match.stage and match.stage != "League" %} · Match day {{ match.stage }}{% endif %}
+                                        {{ match.kickoff_time|date:"D, d M, g:i a" }}
                                         {% if match.featured %} · Featured{% endif %}
                                     </span>
                                     <span class="deadline-pill{% if match.is_locked %} locked{% endif %}">
