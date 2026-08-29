@@ -1,3 +1,6 @@
+import csv
+from datetime import timedelta
+
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
@@ -8,7 +11,7 @@ from django.conf import settings
 from django.core.mail import EmailMessage
 from django.db import models
 from django.db.models import Sum
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
@@ -360,6 +363,9 @@ def dashboard(request):
         )
         prediction_history = build_prediction_history(request.user)
         accuracy = build_accuracy_summary(prediction_history)
+        dashboard_leaderboards = build_dashboard_leaderboards(memberships)
+    if can_create_league:
+        dashboard_leaderboards = None
 
     return render(request, 'leagues/dashboard.html', {
         'memberships': memberships,
@@ -368,6 +374,7 @@ def dashboard(request):
         'join_form': JoinLeagueForm(),
         'prediction_history': prediction_history,
         'accuracy': accuracy,
+        'dashboard_leaderboards': dashboard_leaderboards,
     })
 
 
@@ -500,6 +507,30 @@ def organiser_sync_fixtures(request, pk):
 
     messages.success(request, f'Fixture sync complete. {summary}.')
     return redirect('organiser_league_settings', pk=league.pk)
+
+
+@login_required
+def organiser_export_data(request, pk, dataset):
+    if not is_organiser(request.user):
+        messages.error(request, 'Organiser access is invite-only for now.')
+        return redirect('dashboard')
+
+    league = get_owned_league_or_404(pk, request.user)
+    exporters = {
+        'matches': export_matches_csv,
+        'predictions': export_predictions_csv,
+        'players': export_players_csv,
+    }
+    exporter = exporters.get(dataset)
+    if exporter is None:
+        raise Http404('Export not found')
+
+    response = HttpResponse(content_type='text/csv')
+    filename = f'{league.slug}-{dataset}.csv'
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    writer = csv.writer(response)
+    exporter(writer, league)
+    return response
 
 
 @login_required
@@ -766,6 +797,7 @@ def profile(request):
     memberships = (
         LeagueMembership.objects
         .filter(user=request.user)
+        .filter(league__competition__active=True)
         .select_related('league', 'league__competition', 'supported_team')
         .order_by('-joined_at')
     )
@@ -826,7 +858,11 @@ def league_detail(request, pk):
         messages.error(request, 'Organiser accounts cannot play in prediction leagues. Use a separate player account to play.')
         return redirect('dashboard')
 
-    league = get_object_or_404(PrivateLeague.objects.select_related('competition', 'owner'), pk=pk)
+    league = get_object_or_404(
+        PrivateLeague.objects.select_related('competition', 'owner'),
+        pk=pk,
+        competition__active=True,
+    )
     membership = get_membership_or_404(league, request.user)
     matches = visible_matches_for(league, membership)
     predictions = {
@@ -836,7 +872,7 @@ def league_detail(request, pk):
     has_predictions = Prediction.objects.filter(user=request.user, league=league).exists()
     leaderboard = build_leaderboard(league)
     league_status = build_league_status(request.user, league, matches, predictions, leaderboard)
-    matchdays = build_matchdays(matches)
+    matchdays = build_matchdays(matches, open_match_limit=4)
 
     return render(request, 'leagues/league_detail.html', {
         'league': league,
@@ -1193,7 +1229,27 @@ def build_accuracy_summary(prediction_history):
     }
 
 
-def build_leaderboard(league):
+def build_dashboard_leaderboards(memberships):
+    memberships = list(memberships)
+    if not memberships:
+        return None
+
+    league = memberships[0].league
+    now = timezone.localtime()
+    week_start = now - timedelta(days=now.weekday())
+    week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
+    week_end = week_start + timedelta(days=7)
+
+    return {
+        'league': league,
+        'week_start': week_start,
+        'week_end': week_end,
+        'weekly': build_leaderboard(league, from_time=week_start, to_time=week_end)[:5],
+        'lifetime': build_leaderboard(league)[:5],
+    }
+
+
+def build_leaderboard(league, from_time=None, to_time=None):
     memberships = (
         LeagueMembership.objects
         .filter(league=league)
@@ -1207,6 +1263,10 @@ def build_leaderboard(league):
             league=league,
             match__counts_towards_league=True,
         )
+        if from_time is not None:
+            predictions = predictions.filter(match__kickoff_time__gte=from_time)
+        if to_time is not None:
+            predictions = predictions.filter(match__kickoff_time__lt=to_time)
         prediction_count = predictions.count()
         total_points = predictions.aggregate(total=Sum('points'))['total'] or 0
         exact_scores = predictions.filter(points=7).count()
@@ -1280,10 +1340,11 @@ def build_league_status(user, league, matches, predictions, leaderboard):
     }
 
 
-def build_matchdays(matches):
+def build_matchdays(matches, open_match_limit=None):
     grouped = []
     current_date = None
     current_group = None
+    visible_open_matches = 0
 
     for match in matches:
         match.deadline_label = match_deadline_label(match)
@@ -1294,8 +1355,17 @@ def build_matchdays(matches):
             current_group = {
                 'date': match_date,
                 'matches': [],
+                'collapsed': False,
             }
             grouped.append(current_group)
+
+        if open_match_limit is not None and not match.is_locked:
+            if visible_open_matches >= open_match_limit:
+                current_group['collapsed'] = True
+            visible_open_matches += 1
+        elif open_match_limit is not None and match.is_locked:
+            current_group['collapsed'] = True
+
         current_group['matches'].append(match)
 
     return grouped
@@ -1308,5 +1378,134 @@ def recalculate_match_points(league, match):
         prediction.save()
         count += 1
     return count
+
+
+def export_matches_csv(writer, league):
+    writer.writerow([
+        'match_id',
+        'api_fixture_id',
+        'match_day',
+        'home_team',
+        'away_team',
+        'kickoff_time',
+        'status',
+        'home_score',
+        'away_score',
+        'venue',
+        'featured',
+        'counts_towards_league',
+    ])
+    for match in (
+        Match.objects
+        .filter(competition=league.competition)
+        .select_related('home_team', 'away_team')
+        .order_by('kickoff_time', 'id')
+    ):
+        writer.writerow([
+            match.id,
+            match.api_fixture_id or '',
+            match.stage or '',
+            match.home_team.name,
+            match.away_team.name,
+            timezone.localtime(match.kickoff_time).strftime('%Y-%m-%d %H:%M'),
+            match.get_status_display(),
+            '' if match.home_score is None else match.home_score,
+            '' if match.away_score is None else match.away_score,
+            match.venue,
+            'yes' if match.featured else 'no',
+            'yes' if match.counts_towards_league else 'no',
+        ])
+
+
+def export_predictions_csv(writer, league):
+    writer.writerow([
+        'prediction_id',
+        'user_id',
+        'username',
+        'display_name',
+        'email',
+        'match_id',
+        'api_fixture_id',
+        'match_day',
+        'home_team',
+        'away_team',
+        'kickoff_time',
+        'predicted_home_score',
+        'predicted_away_score',
+        'actual_home_score',
+        'actual_away_score',
+        'status',
+        'points',
+        'counts_towards_league',
+        'created_at',
+        'updated_at',
+    ])
+    for prediction in (
+        Prediction.objects
+        .filter(league=league)
+        .select_related('user', 'match', 'match__home_team', 'match__away_team')
+        .order_by('match__kickoff_time', 'match_id', 'user__username')
+    ):
+        match = prediction.match
+        writer.writerow([
+            prediction.id,
+            prediction.user_id,
+            prediction.user.username,
+            prediction.user.first_name or prediction.user.username,
+            prediction.user.email,
+            match.id,
+            match.api_fixture_id or '',
+            match.stage or '',
+            match.home_team.name,
+            match.away_team.name,
+            timezone.localtime(match.kickoff_time).strftime('%Y-%m-%d %H:%M'),
+            prediction.predicted_home_score,
+            prediction.predicted_away_score,
+            '' if match.home_score is None else match.home_score,
+            '' if match.away_score is None else match.away_score,
+            match.get_status_display(),
+            prediction.points,
+            'yes' if match.counts_towards_league else 'no',
+            timezone.localtime(prediction.created_at).strftime('%Y-%m-%d %H:%M'),
+            timezone.localtime(prediction.updated_at).strftime('%Y-%m-%d %H:%M'),
+        ])
+
+
+def export_players_csv(writer, league):
+    writer.writerow([
+        'user_id',
+        'username',
+        'display_name',
+        'email',
+        'role',
+        'supported_team',
+        'predictions',
+        'exact_scores',
+        'total_points',
+        'joined_at',
+    ])
+    leaderboard_by_user = {
+        row['user'].id: row
+        for row in build_leaderboard(league)
+    }
+    for membership in (
+        LeagueMembership.objects
+        .filter(league=league)
+        .select_related('user', 'supported_team')
+        .order_by('user__username')
+    ):
+        row = leaderboard_by_user.get(membership.user_id, {})
+        writer.writerow([
+            membership.user_id,
+            membership.user.username,
+            membership.user.first_name or membership.user.username,
+            membership.user.email,
+            membership.get_role_display(),
+            membership.supported_team.name if membership.supported_team else '',
+            row.get('prediction_count', 0),
+            row.get('exact_scores', 0),
+            row.get('total_points', 0),
+            timezone.localtime(membership.joined_at).strftime('%Y-%m-%d %H:%M'),
+        ])
 
 # Create your views here.

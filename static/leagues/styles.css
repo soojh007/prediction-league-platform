@@ -770,6 +770,13 @@ textarea {
     gap: 10px;
 }
 
+.export-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 14px;
+}
+
 .league-list,
 .fixture-list,
 .leaderboard-list {
@@ -864,6 +871,10 @@ textarea {
     gap: 8px;
 }
 
+.matchday-group:not([open]) {
+    gap: 0;
+}
+
 .matchday-heading {
     display: flex;
     align-items: center;
@@ -871,6 +882,24 @@ textarea {
     gap: 10px;
     border-bottom: 1px solid var(--line);
     padding-bottom: 6px;
+    cursor: pointer;
+    list-style: none;
+}
+
+.matchday-heading::-webkit-details-marker {
+    display: none;
+}
+
+.matchday-heading::after {
+    color: var(--muted);
+    content: "Show";
+    font-size: 12px;
+    font-weight: 850;
+    text-transform: uppercase;
+}
+
+.matchday-group[open] .matchday-heading::after {
+    content: "Hide";
 }
 
 .matchday-heading h3 {
@@ -908,6 +937,70 @@ textarea {
     box-shadow: var(--shadow);
     transform: translateY(-1px);
     outline: none;
+}
+
+.dashboard-leaderboards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.mini-leaderboard {
+    display: grid;
+    align-content: start;
+    gap: 8px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: #f8fafc;
+    padding: 12px;
+}
+
+.mini-leaderboard-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.mini-leaderboard-heading strong {
+    color: var(--ink);
+    font-size: 16px;
+}
+
+.mini-leaderboard-row {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--ink);
+    padding: 10px;
+    text-decoration: none;
+}
+
+.mini-leaderboard-row strong,
+.mini-leaderboard-row span {
+    min-width: 0;
+}
+
+.mini-leaderboard-row strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mini-leaderboard-row > span:last-child {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.compact-empty {
+    padding: 12px;
 }
 
 .league-card {
@@ -1517,6 +1610,10 @@ textarea {
         justify-items: center;
     }
 
+    .dashboard-leaderboards {
+        grid-template-columns: 1fr;
+    }
+
     .team-form-grid {
         grid-template-columns: 1fr;
     }
@@ -1764,6 +1861,10 @@ textarea {
     .match-meta {
         padding-left: 34px;
         font-size: 14px;
+    }
+
+    .matchday-heading::after {
+        font-size: 11px;
     }
 
     .deadline-pill {

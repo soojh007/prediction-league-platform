@@ -63,6 +63,21 @@
     <div class="panel">
         <div class="section-heading compact">
             <div>
+                <p class="eyebrow">Data export</p>
+                <h2>Download league data</h2>
+            </div>
+        </div>
+        <p class="helper-text">Download CSV files for backup, checking results, or spreadsheet analysis.</p>
+        <div class="export-actions">
+            <a class="secondary-button" href="{% url 'organiser_export_data' league.pk 'matches' %}">Matches CSV</a>
+            <a class="secondary-button" href="{% url 'organiser_export_data' league.pk 'predictions' %}">Predictions CSV</a>
+            <a class="secondary-button" href="{% url 'organiser_export_data' league.pk 'players' %}">Players CSV</a>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="section-heading compact">
+            <div>
                 <p class="eyebrow">Players</p>
                 <h2>{{ members|length }} members</h2>
             </div>

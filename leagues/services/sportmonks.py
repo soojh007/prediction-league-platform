@@ -355,14 +355,11 @@ class SportMonksSyncService:
         team = Team.objects.filter(competition=competition, api_team_id=api_team_id).first()
         if team is not None:
             changed = False
-            if name and team.name != name:
-                team.name = name
-                changed = True
-            if logo_url and team.logo_url != logo_url:
+            if logo_url and not team.logo_url:
                 team.logo_url = logo_url
                 changed = True
             if changed:
-                team.save()
+                team.save(update_fields=['logo_url'])
             return team
 
         team, _ = Team.objects.update_or_create(

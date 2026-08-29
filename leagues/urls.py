@@ -13,6 +13,7 @@ urlpatterns = [
     path('profile/', views.profile, name='profile'),
     path('organiser/leagues/', views.organiser_leagues, name='organiser_leagues'),
     path('organiser/leagues/<int:pk>/settings/', views.organiser_league_settings, name='organiser_league_settings'),
+    path('organiser/leagues/<int:pk>/export/<str:dataset>/', views.organiser_export_data, name='organiser_export_data'),
     path('organiser/leagues/<int:pk>/sync-fixtures/', views.organiser_sync_fixtures, name='organiser_sync_fixtures'),
     path('organiser/leagues/<int:pk>/teams/', views.organiser_teams, name='organiser_teams'),
     path('organiser/leagues/<int:pk>/teams/new/', views.organiser_team_create, name='organiser_team_create'),

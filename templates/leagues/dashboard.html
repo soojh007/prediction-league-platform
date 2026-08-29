@@ -95,6 +95,57 @@
 {% endif %}
 
 {% if not can_create_league %}
+    {% if dashboard_leaderboards %}
+        <section class="panel">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">Leaderboard</p>
+                    <h2>{{ dashboard_leaderboards.league.name }}</h2>
+                </div>
+            </div>
+
+            <div class="dashboard-leaderboards">
+                <div class="mini-leaderboard">
+                    <div class="mini-leaderboard-heading">
+                        <strong>This week</strong>
+                        <span>{{ dashboard_leaderboards.week_start|date:"d M" }} - {{ dashboard_leaderboards.week_end|date:"d M" }}</span>
+                    </div>
+                    {% for row in dashboard_leaderboards.weekly %}
+                        <a class="mini-leaderboard-row" href="{% url 'leaderboard_detail' dashboard_leaderboards.league.pk row.user.pk %}">
+                            <span class="rank">{{ forloop.counter }}</span>
+                            <strong>{{ row.display_name }}</strong>
+                            <span>{{ row.total_points }} pts · {{ row.exact_scores }} exact</span>
+                        </a>
+                    {% empty %}
+                        <div class="empty-state compact-empty">
+                            <strong>Weekly table starts after first result</strong>
+                            <span>This week’s ranking will appear once matches are settled.</span>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="mini-leaderboard">
+                    <div class="mini-leaderboard-heading">
+                        <strong>Lifetime</strong>
+                        <span>Total points and exact scores</span>
+                    </div>
+                    {% for row in dashboard_leaderboards.lifetime %}
+                        <a class="mini-leaderboard-row" href="{% url 'leaderboard_detail' dashboard_leaderboards.league.pk row.user.pk %}">
+                            <span class="rank">{{ forloop.counter }}</span>
+                            <strong>{{ row.display_name }}</strong>
+                            <span>{{ row.total_points }} pts · {{ row.exact_scores }} exact</span>
+                        </a>
+                    {% empty %}
+                        <div class="empty-state compact-empty">
+                            <strong>Leaderboard starts after first result</strong>
+                            <span>Players will appear here once predictions have points.</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+    {% endif %}
+
     <section class="panel">
         <div class="section-heading">
             <div>

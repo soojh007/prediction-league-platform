@@ -103,11 +103,11 @@
 
         <div class="matchday-list">
             {% for matchday in matchdays %}
-                <section class="matchday-group">
-                    <div class="matchday-heading">
+                <details class="matchday-group" {% if not matchday.collapsed %}open{% endif %}>
+                    <summary class="matchday-heading">
                         <h3>{{ matchday.date|date:"D, d M" }}</h3>
                         <span>{{ matchday.matches|length }} match{{ matchday.matches|length|pluralize:"es" }}</span>
-                    </div>
+                    </summary>
 
                     <div class="fixture-list">
                         {% for match in matchday.matches %}
@@ -121,7 +121,9 @@
                                         {{ match.away_team.name }}
                                     </strong>
                                     <span class="match-meta">
-                                        {{ match.kickoff_time|date:"g:i a" }}{% if match.featured %} · Featured{% endif %}
+                                        {{ match.kickoff_time|date:"g:i a" }}
+                                        {% if match.stage and match.stage != "League" %} · Match day {{ match.stage }}{% endif %}
+                                        {% if match.featured %} · Featured{% endif %}
                                     </span>
                                     <span class="deadline-pill{% if match.is_locked %} locked{% endif %}">
                                         {{ match.deadline_label }}
@@ -140,7 +142,7 @@
                             </div>
                         {% endfor %}
                     </div>
-                </section>
+                </details>
             {% empty %}
                 <div class="empty-state">
                     <strong>Fixtures are being prepared</strong>
