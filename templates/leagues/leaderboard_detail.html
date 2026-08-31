@@ -28,19 +28,6 @@
         <strong>{{ accuracy.correct_results }}</strong>
         <small>Correct outcome, not exact</small>
     </div>
-    <div class="status-card">
-        <span>Supported club</span>
-        {% if membership.supported_team %}
-            <strong class="with-badge compact">
-                {% include "leagues/partials/team_badge.html" with team=membership.supported_team %}
-                {{ membership.supported_team.name }}
-            </strong>
-            <small>{{ league.get_prediction_mode_display }}</small>
-        {% else %}
-            <strong>None</strong>
-            <small>{{ league.get_prediction_mode_display }}</small>
-        {% endif %}
-    </div>
 </section>
 
 <section class="panel">
