@@ -85,33 +85,35 @@
 </section>
 {% endif %}
 
-<section class="intro-panel panel">
-    <div>
-        <p class="eyebrow">How it works</p>
-        <h2>
-            {% if league and league.landing_how_title %}
-                {{ league.landing_how_title }}
-            {% elif league and league.prediction_mode == 'ALL' %}
-                Every matchday is the challenge.
-            {% elif league and league.prediction_mode == 'SUPPORTER' %}
-                Pick one club and follow their season.
+{% if league %}
+    <section class="intro-panel panel">
+        <div>
+            <p class="eyebrow">How it works</p>
+            <h2>
+                {% if league.landing_how_title %}
+                    {{ league.landing_how_title }}
+                {% elif league.prediction_mode == 'ALL' %}
+                    Every matchday is the challenge.
+                {% elif league.prediction_mode == 'SUPPORTER' %}
+                    Pick one club and follow their season.
+                {% else %}
+                    Flexible modes for different fan groups.
+                {% endif %}
+            </h2>
+        </div>
+        <p>
+            {% if league.landing_how_body %}
+                {{ league.landing_how_body }}
+            {% elif league.prediction_mode == 'ALL' %}
+                Everyone predicts the same fixtures, so the leaderboard is direct and easy to compare. It is the best format for compact leagues, office pools, and groups who want the full-season test.
+            {% elif league.prediction_mode == 'SUPPORTER' %}
+                Instead of asking every player to predict every match, this mode keeps it light: choose your supported club, predict their fixtures, and compete on the same scoring rules.
             {% else %}
-                Flexible modes for different fan groups.
+                Some leagues ask players to back one club for the season. Others ask everyone to predict every fixture. Each league can use the format that feels fairest for its players.
             {% endif %}
-        </h2>
-    </div>
-    <p>
-        {% if league and league.landing_how_body %}
-            {{ league.landing_how_body }}
-        {% elif league and league.prediction_mode == 'ALL' %}
-            Everyone predicts the same fixtures, so the leaderboard is direct and easy to compare. It is the best format for compact leagues, office pools, and groups who want the full-season test.
-        {% elif league and league.prediction_mode == 'SUPPORTER' %}
-            Instead of asking every player to predict every match, this mode keeps it light: choose your supported club, predict their fixtures, and compete on the same scoring rules.
-        {% else %}
-            Some leagues ask players to back one club for the season. Others ask everyone to predict every fixture. Each league can use the format that feels fairest for its players.
-        {% endif %}
-    </p>
-</section>
+        </p>
+    </section>
+{% endif %}
 
 <section class="feature-grid landing-features">
     <div class="panel">
