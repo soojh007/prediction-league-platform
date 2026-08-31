@@ -22,10 +22,40 @@ FINISHED_STATES = {
     'PEN',
     'AFTER_PENALTIES',
 }
+SPL_TEAM_BRANDING_OVERRIDES = {
+    17802: {
+        'name': 'FC Jurong',
+        'short_name': 'FCJ',
+        'logo_url': '/static/leagues/spl/fc-jurong-2026.png',
+    },
+    8007: {
+        'name': 'Lion City Sailors',
+        'short_name': 'LCS',
+        'logo_url': '/static/leagues/spl/lioncitysailors.png',
+    },
+    9259: {
+        'name': 'Tanjong Pagar United',
+        'short_name': 'TPU',
+        'logo_url': '/static/leagues/spl/tanjong-pagar-united.png',
+    },
+}
 
 
 class SportMonksError(Exception):
     pass
+
+
+def apply_team_branding_override(team_data):
+    override = SPL_TEAM_BRANDING_OVERRIDES.get(team_data.get('id'))
+    if not override:
+        return team_data
+    return {
+        **team_data,
+        'name': override['name'],
+        'short_code': override['short_name'],
+        'image_path': override['logo_url'],
+        'logo_path': override['logo_url'],
+    }
 
 
 class SportMonksClient:
@@ -191,6 +221,7 @@ class SportMonksSyncService:
 
         season_id = self._season_id(competition)
         for team_data in self.client.teams(season_id):
+            team_data = apply_team_branding_override(team_data)
             stats['checked'] += 1
             api_team_id = team_data.get('id')
             name = team_data.get('name')
@@ -348,6 +379,7 @@ class SportMonksSyncService:
         return bool(api_stage) and (not current_stage or current_stage == 'League')
 
     def _upsert_fixture_team(self, competition, team_data):
+        team_data = apply_team_branding_override(team_data)
         api_team_id = team_data.get('id')
         name = team_data.get('name')
         logo_url = team_data.get('image_path') or team_data.get('logo_path') or ''
@@ -355,11 +387,22 @@ class SportMonksSyncService:
         team = Team.objects.filter(competition=competition, api_team_id=api_team_id).first()
         if team is not None:
             changed = False
+            override = SPL_TEAM_BRANDING_OVERRIDES.get(api_team_id)
+            if override:
+                if team.name != override['name']:
+                    team.name = override['name']
+                    changed = True
+                if team.short_name != override['short_name']:
+                    team.short_name = override['short_name']
+                    changed = True
+                if team.logo_url != override['logo_url']:
+                    team.logo_url = override['logo_url']
+                    changed = True
             if logo_url and not team.logo_url:
                 team.logo_url = logo_url
                 changed = True
             if changed:
-                team.save(update_fields=['logo_url'])
+                team.save(update_fields=['name', 'short_name', 'logo_url'])
             return team
 
         team, _ = Team.objects.update_or_create(

@@ -578,6 +578,67 @@ class LeagueJoinFlowTests(TestCase):
         self.assertEqual(match.stage, 'Round 1')
         self.assertEqual(match.venue, 'Emirates Stadium')
 
+    def test_sportmonks_sync_keeps_local_spl_team_branding(self):
+        self.spl.competition.api_league_id = 1357
+        self.spl.competition.api_season_id = 28091
+        self.spl.competition.save(update_fields=['api_league_id', 'api_season_id'])
+
+        class FakeSportMonksClient:
+            def teams(self, season_id):
+                return [
+                    {
+                        'id': 9259,
+                        'name': 'Tanjong Pagar',
+                        'short_code': None,
+                        'image_path': 'https://cdn.sportmonks.com/old-tanjong.png',
+                    },
+                    {
+                        'id': 7446,
+                        'name': 'Geylang International',
+                        'short_code': 'GEY',
+                        'image_path': 'https://cdn.sportmonks.com/geylang.png',
+                    },
+                ]
+
+            def fixtures(self, season_id):
+                return [
+                    {
+                        'id': 19778301,
+                        'starting_at': '2026-09-14 11:30:00',
+                        'state': {'short_name': 'NS', 'name': 'Not Started'},
+                        'round': {'name': 'Match day 1'},
+                        'venue': {'name': 'Jurong East Stadium'},
+                        'participants': [
+                            {
+                                'id': 7446,
+                                'name': 'Geylang International',
+                                'short_code': 'GEY',
+                                'image_path': 'https://cdn.sportmonks.com/geylang.png',
+                                'meta': {'location': 'home'},
+                            },
+                            {
+                                'id': 9259,
+                                'name': 'Tanjong Pagar',
+                                'short_code': None,
+                                'image_path': 'https://cdn.sportmonks.com/old-tanjong.png',
+                                'meta': {'location': 'away'},
+                            },
+                        ],
+                    },
+                ]
+
+        service = SportMonksSyncService(client=FakeSportMonksClient())
+        service.sync_teams(self.spl.competition)
+        service.sync_fixtures(self.spl.competition)
+
+        team = Team.objects.get(competition=self.spl.competition, api_team_id=9259)
+        self.assertEqual(team.name, 'Tanjong Pagar United')
+        self.assertEqual(team.short_name, 'TPU')
+        self.assertEqual(team.logo_url, '/static/leagues/spl/tanjong-pagar-united.png')
+
+        match = Match.objects.get(api_fixture_id=19778301)
+        self.assertEqual(match.away_team, team)
+
     def test_sportmonks_sync_uses_configured_season_id_directly(self):
         self.spl.competition.api_league_id = 1357
         self.spl.competition.api_season_id = 28091
