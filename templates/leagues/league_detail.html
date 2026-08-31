@@ -91,7 +91,7 @@
     </div>
 </section>
 
-<section class="content-grid">
+<section>
     <div class="panel">
         <div class="section-heading compact">
             <div>
@@ -146,34 +146,6 @@
                 <div class="empty-state">
                     <strong>Fixtures are being prepared</strong>
                     <span>Check back soon for the next matches.</span>
-                </div>
-            {% endfor %}
-        </div>
-    </div>
-
-    <div class="panel">
-        <p class="eyebrow">Leaderboard</p>
-        <h2>{{ league.get_ranking_mode_display }}</h2>
-        <div class="leaderboard-list">
-            {% for row in leaderboard %}
-                <a class="leaderboard-row leaderboard-link" href="{% url 'leaderboard_detail' league.pk row.user.pk %}">
-                    <span class="rank">{{ forloop.counter }}</span>
-                    <div class="leaderboard-main">
-                        <strong>{{ row.display_name }}</strong>
-                        <span>
-                            {% if row.supported_team %}
-                                {% include "leagues/partials/team_badge.html" with team=row.supported_team %}
-                                {{ row.supported_team.name }} ·
-                            {% endif %}
-                            {{ row.prediction_count }} predictions · {{ row.exact_scores }} exact
-                        </span>
-                    </div>
-                    <strong class="leaderboard-points">{{ row.total_points }}</strong>
-                </a>
-            {% empty %}
-                <div class="empty-state">
-                    <strong>Leaderboard starts after first result</strong>
-                    <span>Players will appear here once predictions have points.</span>
                 </div>
             {% endfor %}
         </div>

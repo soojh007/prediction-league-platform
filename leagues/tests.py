@@ -223,7 +223,7 @@ class LeagueJoinFlowTests(TestCase):
         self.assertContains(response, 'Recent form')
         self.assertContains(response, 'Main Stadium')
 
-    def test_leaderboard_rows_link_to_player_detail(self):
+    def test_dashboard_leaderboard_rows_link_to_player_detail(self):
         self.epl.prediction_mode = PrivateLeague.PredictionMode.ALL
         self.epl.save()
         home = Team.objects.create(competition=self.epl.competition, name='Arsenal')
@@ -247,7 +247,7 @@ class LeagueJoinFlowTests(TestCase):
         )
 
         self.client.force_login(self.player)
-        response = self.client.get(self.epl.get_absolute_url())
+        response = self.client.get(reverse('dashboard'))
 
         detail_url = reverse('leaderboard_detail', args=[self.epl.pk, self.player.pk])
         self.assertContains(response, f'href="{detail_url}"')
@@ -397,11 +397,11 @@ class LeagueJoinFlowTests(TestCase):
         self.assertEqual(bonus_prediction.points, 0)
 
         self.client.force_login(self.player)
-        response = self.client.get(self.epl.get_absolute_url())
+        league_response = self.client.get(self.epl.get_absolute_url())
+        dashboard_response = self.client.get(reverse('dashboard'))
 
-        self.assertContains(response, 'Does not count')
-        self.assertContains(response, '<strong class="leaderboard-points">7</strong>', html=True)
-        self.assertContains(response, '1 predictions · 1 exact')
+        self.assertContains(league_response, 'Does not count')
+        self.assertContains(dashboard_response, '7 pts · 1 exact')
 
     def test_one_off_matches_can_be_next_prediction(self):
         self.epl.prediction_mode = PrivateLeague.PredictionMode.ALL

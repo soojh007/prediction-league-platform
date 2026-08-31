@@ -51,47 +51,6 @@
             {% endfor %}
         </div>
     </section>
-{% else %}
-    <section class="panel">
-        <div class="section-heading">
-            <div>
-                <p class="eyebrow">My leagues</p>
-                <h2>Prediction leagues</h2>
-            </div>
-        </div>
-
-        <div class="league-list">
-            {% for membership in memberships %}
-                <a class="league-card" href="{{ membership.league.get_absolute_url }}">
-                    <div class="league-card-title">
-                        {% include "leagues/partials/competition_logo.html" with competition=membership.league.competition %}
-                        <div>
-                            <strong>{{ membership.league.name }}</strong>
-                            <span>{{ membership.league.competition.name }} · {{ membership.league.get_prediction_mode_display }}</span>
-                        </div>
-                    </div>
-                    {% if membership.league.prediction_mode == 'SUPPORTER' %}
-                        {% if membership.supported_team %}
-                            <span class="team-pill">
-                                {% include "leagues/partials/team_badge.html" with team=membership.supported_team %}
-                                {{ membership.supported_team.name }}
-                            </span>
-                        {% else %}
-                            <span class="pill">Choose club</span>
-                        {% endif %}
-                    {% else %}
-                        <span class="pill">{{ membership.league.get_prediction_mode_display }}</span>
-                    {% endif %}
-                </a>
-            {% empty %}
-                <div class="empty-state">
-                    <strong>Choose a league to start</strong>
-                    <span>Your leagues will appear here after you join from a league landing page.</span>
-                    <a class="secondary-button" href="{% url 'home' %}#available-leagues">Browse leagues</a>
-                </div>
-            {% endfor %}
-        </div>
-    </section>
 {% endif %}
 
 {% if not can_create_league %}
@@ -264,6 +223,7 @@
             {% endfor %}
         </div>
     </section>
+
 {% endif %}
 
 <section class="{% if can_create_league %}dashboard-grid{% else %}player-dashboard-grid{% endif %}">
@@ -289,4 +249,47 @@
         </div>
     {% endif %}
 </section>
+
+{% if not can_create_league %}
+    <section class="panel">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">My leagues</p>
+                <h2>Prediction leagues</h2>
+            </div>
+        </div>
+
+        <div class="league-list">
+            {% for membership in memberships %}
+                <a class="league-card" href="{{ membership.league.get_absolute_url }}">
+                    <div class="league-card-title">
+                        {% include "leagues/partials/competition_logo.html" with competition=membership.league.competition %}
+                        <div>
+                            <strong>{{ membership.league.name }}</strong>
+                            <span>{{ membership.league.competition.name }} · {{ membership.league.get_prediction_mode_display }}</span>
+                        </div>
+                    </div>
+                    {% if membership.league.prediction_mode == 'SUPPORTER' %}
+                        {% if membership.supported_team %}
+                            <span class="team-pill">
+                                {% include "leagues/partials/team_badge.html" with team=membership.supported_team %}
+                                {{ membership.supported_team.name }}
+                            </span>
+                        {% else %}
+                            <span class="pill">Choose club</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="pill">{{ membership.league.get_prediction_mode_display }}</span>
+                    {% endif %}
+                </a>
+            {% empty %}
+                <div class="empty-state">
+                    <strong>Choose a league to start</strong>
+                    <span>Your leagues will appear here after you join from a league landing page.</span>
+                    <a class="secondary-button" href="{% url 'home' %}#available-leagues">Browse leagues</a>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+{% endif %}
 {% endblock %}
