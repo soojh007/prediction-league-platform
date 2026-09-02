@@ -213,6 +213,7 @@ h2 {
 }
 
 .intro-panel,
+.prize-panel,
 .supporter-callout {
     display: grid;
     grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
@@ -221,6 +222,7 @@ h2 {
 }
 
 .intro-panel p,
+.prize-panel p,
 .supporter-callout p {
     margin: 0;
     color: var(--muted);
@@ -228,8 +230,37 @@ h2 {
 }
 
 .intro-panel h2,
+.prize-panel h2,
 .supporter-callout h2 {
     margin-bottom: 8px;
+}
+
+.prize-panel {
+    align-items: center;
+    background: #fffaf0;
+    border-color: #ffd89a;
+}
+
+.prize-list {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 8px 12px;
+    align-items: center;
+    border-radius: var(--radius);
+    background: #fff;
+    padding: 14px;
+}
+
+.prize-list span {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 850;
+    text-transform: uppercase;
+}
+
+.prize-list strong {
+    color: var(--ink);
+    font-size: 18px;
 }
 
 .landing-features .panel {
@@ -263,6 +294,25 @@ h2 {
 .supporter-callout {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
+}
+
+.organiser-mini-callout {
+    padding: 14px 16px;
+    background: #f8fafc;
+}
+
+.organiser-mini-callout h2 {
+    font-size: 18px;
+    margin-bottom: 4px;
+}
+
+.organiser-mini-callout p:not(.eyebrow) {
+    font-size: 14px;
+}
+
+.organiser-mini-callout .secondary-button {
+    min-height: 36px;
+    padding: 7px 12px;
 }
 
 .organiser-note {

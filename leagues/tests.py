@@ -50,6 +50,17 @@ class LeagueJoinFlowTests(TestCase):
         self.assertEqual(LeagueMembership.objects.filter(user=self.player).count(), 2)
         self.assertTrue(LeagueMembership.objects.filter(league=self.spl, user=self.player).exists())
 
+    def test_logout_form_returns_player_to_public_league_landing(self):
+        LeagueMembership.objects.create(league=self.spl, user=self.player)
+        self.client.force_login(self.player)
+
+        response = self.client.get(reverse('dashboard'))
+
+        self.assertContains(
+            response,
+            f'name="next" value="{reverse("public_league_landing", args=[self.spl.slug])}"',
+        )
+
     def test_rules_page_is_public(self):
         response = self.client.get(reverse('league_rules', args=[self.epl.slug]))
 
@@ -64,6 +75,12 @@ class LeagueJoinFlowTests(TestCase):
         response = self.client.get(reverse('league_rules', args=[self.epl.slug]))
 
         self.assertContains(response, 'Back to league')
+
+    def test_spl_landing_page_shows_prize_message(self):
+        response = self.client.get(reverse('public_league_landing', args=[self.spl.slug]))
+
+        self.assertContains(response, 'Weekly iJOOZ vouchers')
+        self.assertContains(response, '$200 cash')
 
     def test_organiser_dashboard_counts_league_setup(self):
         home = Team.objects.create(competition=self.epl.competition, name='Arsenal')

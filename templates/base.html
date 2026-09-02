@@ -32,6 +32,11 @@
                 <a href="{% url 'profile' %}">Profile</a>
                 <form method="post" action="{% url 'logout' %}">
                     {% csrf_token %}
+                    {% if nav_host_league %}
+                        <input type="hidden" name="next" value="{% url 'public_league_landing' nav_host_league.slug %}">
+                    {% elif nav_primary_league %}
+                        <input type="hidden" name="next" value="{% url 'public_league_landing' nav_primary_league.slug %}">
+                    {% endif %}
                     <button type="submit">Logout</button>
                 </form>
             {% else %}

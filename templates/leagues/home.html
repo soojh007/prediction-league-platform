@@ -20,7 +20,9 @@
             {% endif %}
         </h1>
         <p>
-            {% if league and league.landing_intro %}
+            {% if league and league.competition.name == 'Singapore Premier League' %}
+                Join the 2026-27 SPL prediction league. Predict every fixture, track your points, and see who reads the league best.
+            {% elif league and league.landing_intro %}
                 {{ league.landing_intro }}
             {% elif league %}
                 {% if league.prediction_mode == 'SUPPORTER' %}
@@ -86,6 +88,22 @@
 {% endif %}
 
 {% if league %}
+    {% if league.competition.name == 'Singapore Premier League' %}
+        <section class="prize-panel panel">
+            <div>
+                <p class="eyebrow">Prizes</p>
+                <h2>Weekly iJOOZ vouchers and $200 for the champion.</h2>
+                <p>Win weekly iJOOZ vouchers by topping the matchday table, then stay in the race for the $200 cash prize awarded to the season winner.</p>
+            </div>
+            <div class="prize-list" aria-label="Prize summary">
+                <span>Weekly winners</span>
+                <strong>iJOOZ vouchers</strong>
+                <span>Season champion</span>
+                <strong>$200 cash</strong>
+            </div>
+        </section>
+    {% endif %}
+
     <section class="intro-panel panel">
         <div>
             <p class="eyebrow">How it works</p>
@@ -132,7 +150,7 @@
             {% if league and league.prediction_mode == 'SUPPORTER' %}
                 Start with the team you support, then your match list stays focused on that club.
             {% elif league and league.prediction_mode == 'ALL' %}
-                Sign up once and your fixtures are ready. No club choice needed.
+                Sign up once and your fixtures are ready.
             {% else %}
                 Pick the competition and format that fits how your group wants to play.
             {% endif %}
@@ -174,11 +192,11 @@
     </div>
 </section>
 
-<section class="supporter-callout panel">
+<section class="supporter-callout organiser-mini-callout panel">
     <div>
         <p class="eyebrow">For organisers</p>
-        <h2>Want to run a private prediction league?</h2>
-        <p>Tell me the competition, format, and group size you have in mind. I can help set up a league for your friends, office, club, or community.</p>
+        <h2>Want one for your group?</h2>
+        <p>Tell me the competition and group size you have in mind.</p>
     </div>
     <a class="secondary-button" href="{% url 'organiser_enquiry' %}{% if league %}?league={{ league.slug }}{% endif %}">
         Enquire

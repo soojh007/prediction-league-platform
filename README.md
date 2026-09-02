@@ -6,25 +6,37 @@
 [![Docker Ready](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](#-docker-quick-start)
 [![Deploy on Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com)
 
-A modern, developer-friendly football prediction platform built with Django. Designed for private groups, offices, fan clubs, and sports communities to run custom prediction tournaments with automated scoring and dynamic leaderboards.
+A modern, customizable football prediction platform built with Django. Designed for private groups, offices, fan clubs, and sports communities to run custom prediction tournaments with automated scoring and dynamic leaderboards.
 
 ---
 
-## ✨ Features
+## 🌟 Two Ways to Use
 
-- **🏆 Multi-Tenant & Multi-Competition**: Run multiple private leagues simultaneously across competitions like the Premier League, UEFA Champions League, FIFA World Cup, and domestic cups.
-- **🎯 Flexible Scoring Engine**: Configurable points for exact scores, correct outcomes (W/D/L), goal differences, and bonus multipliers.
+### 1. 🛠️ Self-Hosted (Free & Open-Source)
+Fork this repository to deploy and manage the application on your own infrastructure (Docker, VPS, or Render). Bring your own sports data API key or use the built-in demo datasets.
+
+### 2. ⚡ Managed Hosting Service (Turnkey)
+Don't want to deal with servers, databases, or sports API subscriptions?
+- We host your private league on [predictionleague.site](https://predictionleague.site).
+- You get a dedicated **Organiser Admin Account** (`/organiser/login/`) to manage match fixtures, customize scoring rules, view predictions, and invite players.
+- Live fixtures and match scores update automatically.
+- **[Request a Managed League](docs/managed-hosting.md)** or contact [`hello@predictionleague.site`](mailto:hello@predictionleague.site).
+
+---
+
+## ✨ Platform Features
+
+- **🏆 Multi-League & Multi-Competition**: Run private leagues across the Premier League, UEFA Champions League, FIFA World Cup, and domestic cups.
+- **🎯 Flexible Scoring Engine**: Set custom points for exact scores, correct outcomes (W/D/L), and goal differences.
 - **📊 Real-Time Leaderboards**: Live standings calculated per private league, with overall platform rankings.
-- **🔌 Dual Data Ingestion Modes**:
-  - **Managed Data Gateway**: 1-click automated fixture and score sync without third-party rate-limit hassles.
-  - **Bring Your Own Key (BYOK)**: Connect personal developer API keys directly from supported sports data providers.
-- **🐳 Self-Host Ready**: Fully prepared for local virtual environments, Docker Compose, or one-click deployment on Render.
+- **👨‍💼 Organiser Management Portal**: League admins can invite players via private codes/links, configure matchdays, and post announcements.
+- **🐳 Self-Host Ready**: Run locally with a Python virtualenv, via Docker Compose, or deploy to Render in 1 click.
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Quick Start (Self-Hosted)
 
-### 1. Local Development (Virtualenv)
+### Local Development with Virtualenv
 
 ```bash
 # 1. Clone the repository
@@ -49,49 +61,37 @@ python manage.py seed_demo
 python manage.py runserver 127.0.0.1:8001
 ```
 
-Access the platform at `http://127.0.0.1:8001`.
-- **Demo Admin Login**: `admin` / `admin123`
-- **Organiser Portal**: `http://127.0.0.1:8001/organiser/login/`
+Access the platform at `http://127.0.0.1:8001`:
+- **Demo Player Login**: `player1` / `admin123`
+- **Organiser Admin Portal**: `http://127.0.0.1:8001/organiser/login/` (`admin` / `admin123`)
 
 ---
 
-### 2. Docker Quick Start
+### Docker Quick Start
 
 ```bash
-# Start the full stack (Web + PostgreSQL)
 docker compose up -d
 ```
 Access the platform at `http://localhost:8000`.
 
 ---
 
-## ⚙️ Sports Data Ingestion Modes
+## ⚙️ Sports Data Feed (Self-Hosted)
 
-Configure your preferred data provider in `.env` or production environment variables:
-
-### Option A: Managed Data Gateway (Recommended)
-Automated fixture synchronization and live result settlement without managing third-party quotas or cron scrapers:
-
-```bash
-SPORTMONKS_API_TOKEN=your_gateway_token_here
-```
-> 💡 *Need a token? Generate an API key at [predictionleague.site](https://predictionleague.site) for automated fixture and score sync.*
-
----
-
-### Option B: Bring Your Own Key (BYOK - Free / Self-Managed)
-Directly connect your personal API credentials:
+If you are self-hosting and want live data sync, add your API key in `.env`:
 
 ```bash
 FOOTBALL_API_KEY=your_api_football_key
+# or
+SPORTMONKS_API_TOKEN=your_sportmonks_token
 ```
 
-Sync data using management commands:
+Run sync commands:
 ```bash
-# Sync team names and logos:
+# Sync team names and badges:
 python manage.py sync_api_teams --private-league-id 1
 
-# Sync fixtures for a date range:
+# Sync fixtures:
 python manage.py sync_api_fixtures --private-league-id 1 --with-teams --from 2026-08-01 --to 2026-08-31
 ```
 
@@ -106,8 +106,8 @@ python manage.py sync_api_fixtures --private-league-id 1 --with-teams --from 202
 | `ALLOWED_HOSTS` | Comma-separated list of valid hostnames | `127.0.0.1,localhost` | Yes |
 | `CSRF_TRUSTED_ORIGINS` | Comma-separated list of trusted origins | - | If deployed over HTTPS |
 | `DATABASE_URL` | PostgreSQL connection URL | SQLite (`db.sqlite3`) | No |
-| `SPORTMONKS_API_TOKEN` | Managed Data Gateway API token | - | For Managed Gateway |
-| `FOOTBALL_API_KEY` | API-Football credentials | - | For Direct BYOK |
+| `SPORTMONKS_API_TOKEN` | SportMonks API token | - | For live SportMonks sync |
+| `FOOTBALL_API_KEY` | API-Football API key | - | For live API-Football sync |
 
 ---
 
@@ -116,15 +116,14 @@ python manage.py sync_api_fixtures --private-league-id 1 --with-teams --from 202
 This repository includes a ready-to-use `render.yaml` blueprint:
 
 1. Push your repository to GitHub.
-2. Log into [Render](https://render.com) and create a **New Blueprint Instance**.
-3. Select your repository to automatically provision the PostgreSQL database and web service.
-4. Set `SPORTMONKS_API_TOKEN` in your Render Environment settings.
+2. In [Render](https://render.com), create a **New Blueprint Instance**.
+3. Link your repository to automatically provision the web service and PostgreSQL database.
 
 ---
 
 ## 🤝 Contributing
 
-Contributions, bug reports, and feature suggestions are welcome! Please review [CONTRIBUTING.md](CONTRIBUTING.md) and use the provided issue templates.
+Contributions, bug reports, and pull requests are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ---
 

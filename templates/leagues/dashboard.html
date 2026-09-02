@@ -183,7 +183,7 @@
                             {% include "leagues/partials/team_badge.html" with team=row.match.away_team %}
                             {{ row.match.away_team.name }}
                         </strong>
-                        <span>{{ row.league.name }} · {{ row.match.kickoff_time|date:"d M, g:i a" }}</span>
+                        <span>{{ row.league.competition.name }} · {{ row.match.kickoff_time|date:"d M, g:i a" }}</span>
                         {% if not row.counts_towards_league %}
                             <span class="deadline-pill locked">Does not count</span>
                         {% endif %}
@@ -225,30 +225,6 @@
     </section>
 
 {% endif %}
-
-<section class="{% if can_create_league %}dashboard-grid{% else %}player-dashboard-grid{% endif %}">
-    {% if not can_create_league %}
-        <div class="panel join-code-panel">
-            <div>
-                <p class="eyebrow">Have an invite code?</p>
-                <p class="helper-text">Use this only for private leagues that are not listed above.</p>
-            </div>
-            <form method="post" action="{% url 'join_league' %}" class="inline-form">
-                {% csrf_token %}
-                {{ join_form.join_code }}
-                <button class="secondary-button" type="submit">Join</button>
-            </form>
-        </div>
-    {% endif %}
-
-    {% if can_create_league %}
-        <div class="panel">
-            <p class="eyebrow">Owned leagues</p>
-            <h2>{{ owned_leagues|length }}</h2>
-            <p class="helper-text">Leagues where you are the organiser.</p>
-        </div>
-    {% endif %}
-</section>
 
 {% if not can_create_league %}
     <section class="panel">
@@ -292,4 +268,28 @@
         </div>
     </section>
 {% endif %}
+
+<section class="{% if can_create_league %}dashboard-grid{% else %}player-dashboard-grid{% endif %}">
+    {% if not can_create_league %}
+        <div class="panel join-code-panel">
+            <div>
+                <p class="eyebrow">Have an invite code?</p>
+                <p class="helper-text">Use this only for private leagues that are not listed above.</p>
+            </div>
+            <form method="post" action="{% url 'join_league' %}" class="inline-form">
+                {% csrf_token %}
+                {{ join_form.join_code }}
+                <button class="secondary-button" type="submit">Join</button>
+            </form>
+        </div>
+    {% endif %}
+
+    {% if can_create_league %}
+        <div class="panel">
+            <p class="eyebrow">Owned leagues</p>
+            <h2>{{ owned_leagues|length }}</h2>
+            <p class="helper-text">Leagues where you are the organiser.</p>
+        </div>
+    {% endif %}
+</section>
 {% endblock %}

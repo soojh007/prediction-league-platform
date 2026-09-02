@@ -1,39 +1,25 @@
-# Managed Sports Data Gateway
+# Managed Sports Data Feed
 
-The **Managed Sports Data Gateway** is a high-performance caching and normalization service providing real-time fixtures, team metadata, and automated match score settlement for self-hosted instances of Prediction League Platform.
-
----
-
-## 💡 Why Use the Managed Gateway?
-
-1. **Avoid Upstream Rate Limits**:
-   Direct third-party sports data feeds often restrict free tiers to strict caps (e.g. 10 requests/minute or 100/day). The managed gateway continuously caches and distributes live scores so your private leagues never miss a live result during busy matchdays.
-2. **Standardized Data Schema**:
-   Eliminate the hassle of data differences across multiple sports providers. The gateway normalizes tournament schedules, team logos, and match states.
-3. **Automated Settlement**:
-   Match outcomes and leaderboards automatically settle within minutes of full-time whistles without requiring custom cron scripts or server maintenance.
+If you are self-hosting this platform and do not want to set up your own third-party sports data API subscriptions (such as SportMonks or API-Football), you can request access to our managed fixture and score feed.
 
 ---
 
-## 🔑 Getting Started with Your Token
+## 💡 How It Works
 
-1. Create an account and generate an API token at [predictionleague.site](https://predictionleague.site).
-2. Add your token to your local `.env` or production environment variables:
-   ```bash
-   SPORTMONKS_API_TOKEN=your_managed_gateway_token_here
+1. **Submit an Enquiry**:
+   Fill out the request form or email [`hello@predictionleague.site`](mailto:hello@predictionleague.site) with your league details:
+   - Competition (e.g. Premier League, Champions League, World Cup)
+   - Estimated number of players / private leagues
+   - Expected season duration
+
+2. **Receive Your API Token**:
+   You will receive a unique API token (e.g. `pl_live_xxxxxxxx`).
+
+3. **Configure Your Instance**:
+   Add the token to your `.env` file:
+   ```env
+   DATA_PROVIDER=managed
+   SPORTMONKS_API_TOKEN=pl_live_xxxxxxxx
    ```
-3. Restart your application. Fixture and score synchronization will now run seamlessly through the gateway.
-
----
-
-## 🛠️ Data Synchronization Commands
-
-When running with a valid token, sync tournaments and fixtures directly via Django management commands:
-
-```bash
-# Sync team names and badges for a private league's competition:
-python manage.py sync_api_teams --private-league-id 1
-
-# Sync fixtures for a date window:
-python manage.py sync_api_fixtures --private-league-id 1 --with-teams --from 2026-08-01 --to 2026-08-31
-```
+4. **Start Syncing**:
+   Fixtures and live match results will sync automatically.
