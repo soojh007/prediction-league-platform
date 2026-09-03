@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.utils import timezone
 from tempfile import NamedTemporaryFile
 
-from .models import Competition, LeagueMembership, Match, OrganiserEnquiry, Prediction, PrivateLeague, Team
+from .models import Competition, LeagueMembership, LeagueNotice, Match, OrganiserEnquiry, Prediction, PrivateLeague, Team
 from .services.sportmonks import SportMonksClient, SportMonksSyncService
 
 
@@ -145,6 +145,39 @@ class LeagueJoinFlowTests(TestCase):
         self.assertContains(response, 'To predict')
         self.assertContains(response, '<strong>2</strong>', html=True)
         self.assertContains(response, '<strong>1</strong>', html=True)
+
+    def test_league_detail_shows_active_noticeboard_messages(self):
+        self.spl.prediction_mode = PrivateLeague.PredictionMode.ALL
+        self.spl.save()
+        LeagueMembership.objects.create(league=self.spl, user=self.player)
+        LeagueNotice.objects.create(
+            league=self.spl,
+            title='Weekly prizes',
+            message='Top the matchday table to win iJOOZ vouchers.',
+            pinned=True,
+        )
+        LeagueNotice.objects.create(
+            league=self.spl,
+            title='Old update',
+            message='This should not be visible.',
+            active=False,
+        )
+        LeagueNotice.objects.create(
+            league=self.spl,
+            title='Future update',
+            message='This should not be visible yet.',
+            starts_at=timezone.now() + timezone.timedelta(days=1),
+        )
+
+        self.client.force_login(self.player)
+        response = self.client.get(self.spl.get_absolute_url())
+
+        self.assertContains(response, 'Noticeboard')
+        self.assertContains(response, 'Weekly prizes')
+        self.assertContains(response, 'Top the matchday table to win iJOOZ vouchers.')
+        self.assertContains(response, 'Pinned')
+        self.assertNotContains(response, 'Old update')
+        self.assertNotContains(response, 'Future update')
 
     def test_predictions_lock_after_kickoff(self):
         self.epl.prediction_mode = PrivateLeague.PredictionMode.ALL

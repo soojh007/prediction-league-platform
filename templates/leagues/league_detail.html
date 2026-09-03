@@ -17,6 +17,28 @@
     </div>
 </section>
 
+{% if notices %}
+    <section class="noticeboard-panel" aria-label="League noticeboard">
+        <div class="noticeboard-heading">
+            <p class="eyebrow">Noticeboard</p>
+            <span>{{ notices|length }} update{{ notices|length|pluralize }}</span>
+        </div>
+        <div class="noticeboard-list">
+            {% for notice in notices %}
+                <article class="noticeboard-item{% if notice.pinned %} pinned{% endif %}">
+                    <div>
+                        <h2>{{ notice.title }}</h2>
+                        <p>{{ notice.message|linebreaksbr }}</p>
+                    </div>
+                    {% if notice.pinned %}
+                        <span class="deadline-pill">Pinned</span>
+                    {% endif %}
+                </article>
+            {% endfor %}
+        </div>
+    </section>
+{% endif %}
+
 <section class="league-overview-strip">
     <div>
         <span>Open matches</span>

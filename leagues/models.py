@@ -130,6 +130,23 @@ class LeagueMembership(models.Model):
         return f'{self.user.username} in {self.league.name}'
 
 
+class LeagueNotice(models.Model):
+    league = models.ForeignKey(PrivateLeague, on_delete=models.CASCADE, related_name='notices')
+    title = models.CharField(max_length=120)
+    message = models.TextField()
+    active = models.BooleanField(default=True)
+    pinned = models.BooleanField(default=False)
+    starts_at = models.DateTimeField(null=True, blank=True)
+    ends_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-pinned', '-created_at']
+
+    def __str__(self):
+        return f'{self.league.name}: {self.title}'
+
+
 class Match(models.Model):
     class Status(models.TextChoices):
         UPCOMING = 'UPCOMING', 'Upcoming'

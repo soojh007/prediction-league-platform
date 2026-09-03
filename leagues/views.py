@@ -16,7 +16,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from .forms import AccountForm, CompetitionBrandingForm, FixtureSyncForm, JoinLeagueForm, LeagueSettingsForm, MatchForm, MatchResultForm, OrganiserEnquiryForm, PredictionForm, PrivateLeagueForm, SignUpForm, SupportedTeamForm, TeamForm
-from .models import Competition, LeagueMembership, Match, Prediction, PrivateLeague, Team
+from .models import Competition, LeagueMembership, LeagueNotice, Match, Prediction, PrivateLeague, Team
 from .services.sportmonks import SportMonksError, SportMonksSyncService
 
 
@@ -873,6 +873,13 @@ def league_detail(request, pk):
     leaderboard = build_leaderboard(league)
     league_status = build_league_status(request.user, league, matches, predictions, leaderboard)
     matchdays = build_matchdays(matches, open_match_limit=4)
+    now = timezone.now()
+    notices = (
+        LeagueNotice.objects
+        .filter(league=league, active=True)
+        .filter(models.Q(starts_at__isnull=True) | models.Q(starts_at__lte=now))
+        .filter(models.Q(ends_at__isnull=True) | models.Q(ends_at__gte=now))
+    )
 
     return render(request, 'leagues/league_detail.html', {
         'league': league,
@@ -883,6 +890,7 @@ def league_detail(request, pk):
         'has_predictions': has_predictions,
         'leaderboard': leaderboard,
         'league_status': league_status,
+        'notices': notices,
     })
 
 

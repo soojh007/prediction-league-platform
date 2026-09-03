@@ -148,6 +148,69 @@ main {
     line-height: 1.45;
 }
 
+.noticeboard-panel {
+    display: grid;
+    gap: 10px;
+    margin: 0 0 16px;
+    border: 1px solid #bfd5ff;
+    border-radius: var(--radius);
+    background: #f4f8ff;
+    padding: 14px;
+    box-shadow: inset 4px 0 0 var(--primary);
+}
+
+.noticeboard-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.noticeboard-heading .eyebrow {
+    margin: 0;
+}
+
+.noticeboard-heading span {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.noticeboard-list {
+    display: grid;
+    gap: 8px;
+}
+
+.noticeboard-item {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 12px;
+    border: 1px solid #dbe6fa;
+    border-radius: 8px;
+    background: var(--surface);
+    padding: 12px;
+}
+
+.noticeboard-item.pinned {
+    border-color: #f0d391;
+    background: #fffaf0;
+}
+
+.noticeboard-item h2 {
+    margin: 0 0 4px;
+    color: var(--ink);
+    font-size: 18px;
+    line-height: 1.2;
+}
+
+.noticeboard-item p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.45;
+}
+
 .eyebrow {
     margin: 0 0 6px;
     color: #617083;
