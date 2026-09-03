@@ -269,6 +269,60 @@ class LeagueJoinFlowTests(TestCase):
         detail_url = reverse('leaderboard_detail', args=[self.epl.pk, self.player.pk])
         self.assertContains(response, f'href="{detail_url}"')
 
+    def test_dashboard_leaderboard_groups_current_archived_and_lifetime_tables(self):
+        self.epl.prediction_mode = PrivateLeague.PredictionMode.ALL
+        self.epl.save()
+        home = Team.objects.create(competition=self.epl.competition, name='Arsenal')
+        away = Team.objects.create(competition=self.epl.competition, name='Chelsea')
+        current_match = Match.objects.create(
+            competition=self.epl.competition,
+            home_team=home,
+            away_team=away,
+            kickoff_time=timezone.now(),
+            status=Match.Status.FINISHED,
+            home_score=2,
+            away_score=1,
+        )
+        archived_match = Match.objects.create(
+            competition=self.epl.competition,
+            home_team=away,
+            away_team=home,
+            kickoff_time=timezone.now() - timezone.timedelta(days=10),
+            status=Match.Status.FINISHED,
+            home_score=1,
+            away_score=0,
+        )
+        players = [self.player]
+        for index in range(6):
+            players.append(User.objects.create_user(username=f'player-{index}', password='password123'))
+
+        for index, player in enumerate(players):
+            LeagueMembership.objects.create(league=self.epl, user=player)
+            Prediction.objects.create(
+                user=player,
+                league=self.epl,
+                match=current_match,
+                predicted_home_score=2 if index % 2 else 1,
+                predicted_away_score=1,
+            )
+            Prediction.objects.create(
+                user=player,
+                league=self.epl,
+                match=archived_match,
+                predicted_home_score=1 if index < 3 else 0,
+                predicted_away_score=0,
+            )
+
+        self.client.force_login(self.player)
+        response = self.client.get(reverse('dashboard'))
+
+        self.assertContains(response, 'Current week')
+        self.assertContains(response, 'Show all current week players')
+        self.assertContains(response, 'Lifetime')
+        self.assertContains(response, 'Show all lifetime players')
+        self.assertContains(response, 'Archived weekly top 3')
+        self.assertContains(response, 'Top 3')
+
     def test_leaderboard_detail_shows_player_breakdown(self):
         self.epl.prediction_mode = PrivateLeague.PredictionMode.SUPPORTER
         self.epl.save()
@@ -394,6 +448,7 @@ class LeagueJoinFlowTests(TestCase):
             home_score=3,
             away_score=0,
             counts_towards_league=False,
+            stage='Playback Community Shield 2026/27',
         )
         LeagueMembership.objects.create(league=self.epl, user=self.player)
         Prediction.objects.create(
@@ -419,6 +474,7 @@ class LeagueJoinFlowTests(TestCase):
 
         self.assertContains(league_response, 'Does not count')
         self.assertContains(dashboard_response, '7 pts · 1 exact')
+        self.assertContains(dashboard_response, 'Playback Community Shield 2026/27')
 
     def test_one_off_matches_can_be_next_prediction(self):
         self.epl.prediction_mode = PrivateLeague.PredictionMode.ALL

@@ -1019,6 +1019,15 @@ textarea {
     font-size: 16px;
 }
 
+.mini-leaderboard summary {
+    cursor: pointer;
+    list-style: none;
+}
+
+.mini-leaderboard summary::-webkit-details-marker {
+    display: none;
+}
+
 .mini-leaderboard-row {
     display: grid;
     grid-template-columns: 34px minmax(0, 1fr) auto;
@@ -1047,6 +1056,34 @@ textarea {
     color: var(--muted);
     font-size: 13px;
     font-weight: 800;
+}
+
+.archived-leaderboard {
+    grid-column: 1 / -1;
+}
+
+.leaderboard-expander {
+    display: grid;
+    gap: 8px;
+}
+
+.leaderboard-expander summary {
+    color: var(--blue);
+    font-size: 13px;
+    font-weight: 900;
+    text-align: right;
+}
+
+.leaderboard-expander-list,
+.archived-week-list,
+.archived-week {
+    display: grid;
+    gap: 8px;
+}
+
+.archived-week {
+    border-top: 1px solid var(--line);
+    padding-top: 10px;
 }
 
 .compact-empty {

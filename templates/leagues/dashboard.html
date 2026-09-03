@@ -66,7 +66,7 @@
             <div class="dashboard-leaderboards">
                 <div class="mini-leaderboard">
                     <div class="mini-leaderboard-heading">
-                        <strong>This week</strong>
+                        <strong>Current week</strong>
                         <span>{{ dashboard_leaderboards.week_start|date:"d M" }} - {{ dashboard_leaderboards.week_end|date:"d M" }}</span>
                     </div>
                     {% for row in dashboard_leaderboards.weekly %}
@@ -81,6 +81,20 @@
                             <span>This week’s ranking will appear once matches are settled.</span>
                         </div>
                     {% endfor %}
+                    {% if dashboard_leaderboards.weekly_all|length > dashboard_leaderboards.weekly|length %}
+                        <details class="leaderboard-expander">
+                            <summary>Show all current week players</summary>
+                            <div class="leaderboard-expander-list">
+                                {% for row in dashboard_leaderboards.weekly_all %}
+                                    <a class="mini-leaderboard-row" href="{% url 'leaderboard_detail' dashboard_leaderboards.league.pk row.user.pk %}">
+                                        <span class="rank">{{ forloop.counter }}</span>
+                                        <strong>{{ row.display_name }}</strong>
+                                        <span>{{ row.total_points }} pts · {{ row.exact_scores }} exact</span>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        </details>
+                    {% endif %}
                 </div>
 
                 <div class="mini-leaderboard">
@@ -100,7 +114,50 @@
                             <span>Players will appear here once predictions have points.</span>
                         </div>
                     {% endfor %}
+                    {% if dashboard_leaderboards.lifetime_all|length > dashboard_leaderboards.lifetime|length %}
+                        <details class="leaderboard-expander">
+                            <summary>Show all lifetime players</summary>
+                            <div class="leaderboard-expander-list">
+                                {% for row in dashboard_leaderboards.lifetime_all %}
+                                    <a class="mini-leaderboard-row" href="{% url 'leaderboard_detail' dashboard_leaderboards.league.pk row.user.pk %}">
+                                        <span class="rank">{{ forloop.counter }}</span>
+                                        <strong>{{ row.display_name }}</strong>
+                                        <span>{{ row.total_points }} pts · {{ row.exact_scores }} exact</span>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        </details>
+                    {% endif %}
                 </div>
+
+                <details class="mini-leaderboard archived-leaderboard">
+                    <summary class="mini-leaderboard-heading">
+                        <strong>Archived weekly top 3</strong>
+                        <span>{{ dashboard_leaderboards.archived_weeks|length }} weeks</span>
+                    </summary>
+                    <div class="archived-week-list">
+                        {% for week in dashboard_leaderboards.archived_weeks %}
+                            <div class="archived-week">
+                                <div class="mini-leaderboard-heading">
+                                    <strong>{{ week.start|date:"d M" }} - {{ week.end|date:"d M" }}</strong>
+                                    <span>Top 3</span>
+                                </div>
+                                {% for row in week.rows %}
+                                    <a class="mini-leaderboard-row" href="{% url 'leaderboard_detail' dashboard_leaderboards.league.pk row.user.pk %}">
+                                        <span class="rank">{{ forloop.counter }}</span>
+                                        <strong>{{ row.display_name }}</strong>
+                                        <span>{{ row.total_points }} pts · {{ row.exact_scores }} exact</span>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        {% empty %}
+                            <div class="empty-state compact-empty">
+                                <strong>No archived weeks yet</strong>
+                                <span>Past weekly winners will appear after the first week closes.</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </details>
             </div>
         </section>
     {% endif %}
@@ -183,7 +240,7 @@
                             {% include "leagues/partials/team_badge.html" with team=row.match.away_team %}
                             {{ row.match.away_team.name }}
                         </strong>
-                        <span>{{ row.league.competition.name }} · {{ row.match.kickoff_time|date:"d M, g:i a" }}</span>
+                        <span>{{ row.competition_label }} · {{ row.match.kickoff_time|date:"d M, g:i a" }}</span>
                         {% if not row.counts_towards_league %}
                             <span class="deadline-pill locked">Does not count</span>
                         {% endif %}

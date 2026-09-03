@@ -1195,6 +1195,7 @@ def build_prediction_history(user, league=None, *, include_unsettled=True):
             'prediction': prediction,
             'league': prediction.league,
             'match': match,
+            'competition_label': prediction.league.competition.name if match.counts_towards_league else (match.stage or prediction.league.competition.name),
             'has_result': has_result,
             'exact': exact,
             'correct_result': correct_result,
@@ -1235,18 +1236,55 @@ def build_dashboard_leaderboards(memberships):
         return None
 
     league = memberships[0].league
-    now = timezone.localtime()
-    week_start = now - timedelta(days=now.weekday())
-    week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
-    week_end = week_start + timedelta(days=7)
+    week_start, week_end = get_leaderboard_week(timezone.localtime())
+    week_label_end = week_end - timedelta(microseconds=1)
+    lifetime = build_leaderboard(league)
+    current_week = build_leaderboard(league, from_time=week_start, to_time=week_end)
 
     return {
         'league': league,
         'week_start': week_start,
-        'week_end': week_end,
-        'weekly': build_leaderboard(league, from_time=week_start, to_time=week_end)[:5],
-        'lifetime': build_leaderboard(league)[:5],
+        'week_end': week_label_end,
+        'weekly': current_week[:5],
+        'weekly_all': current_week,
+        'archived_weeks': build_archived_weekly_leaderboards(league, week_start),
+        'lifetime': lifetime[:5],
+        'lifetime_all': lifetime,
     }
+
+
+def get_leaderboard_week(now):
+    days_since_tuesday = (now.weekday() - 1) % 7
+    week_start = now - timedelta(days=days_since_tuesday)
+    week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
+    return week_start, week_start + timedelta(days=7)
+
+
+def build_archived_weekly_leaderboards(league, current_week_start):
+    first_match = (
+        Match.objects
+        .filter(competition=league.competition, counts_towards_league=True, kickoff_time__lt=current_week_start)
+        .order_by('kickoff_time')
+        .first()
+    )
+    if not first_match:
+        return []
+
+    first_week_start, _ = get_leaderboard_week(timezone.localtime(first_match.kickoff_time))
+    weeks = []
+    week_start = first_week_start
+    while week_start < current_week_start:
+        week_end = week_start + timedelta(days=7)
+        rows = build_leaderboard(league, from_time=week_start, to_time=week_end)[:3]
+        if rows:
+            weeks.append({
+                'start': week_start,
+                'end': week_end - timedelta(microseconds=1),
+                'rows': rows,
+            })
+        week_start = week_end
+
+    return list(reversed(weeks))
 
 
 def build_leaderboard(league, from_time=None, to_time=None):
