@@ -1005,6 +1005,39 @@ textarea {
     padding: 12px;
 }
 
+.current-week-leaderboard {
+    border-color: #a9c3ff;
+    background: #f2f6ff;
+    box-shadow: inset 4px 0 0 var(--primary);
+}
+
+.lifetime-leaderboard {
+    border-color: #a8d9c4;
+    background: #f1fbf7;
+    box-shadow: inset 4px 0 0 var(--green);
+}
+
+.archived-leaderboard {
+    grid-column: 1 / -1;
+    border-color: #efd8a5;
+    background: #fffaf0;
+    box-shadow: inset 4px 0 0 #d49619;
+}
+
+.current-week-leaderboard .rank {
+    background: #dfe9ff;
+}
+
+.lifetime-leaderboard .rank {
+    background: #dff4ea;
+    color: var(--green);
+}
+
+.archived-leaderboard .rank {
+    background: #f8e8c4;
+    color: #9a6700;
+}
+
 .mini-leaderboard-heading {
     display: flex;
     align-items: center;
@@ -1058,10 +1091,6 @@ textarea {
     font-weight: 800;
 }
 
-.archived-leaderboard {
-    grid-column: 1 / -1;
-}
-
 .leaderboard-expander {
     display: grid;
     gap: 8px;
@@ -1084,6 +1113,10 @@ textarea {
 .archived-week {
     border-top: 1px solid var(--line);
     padding-top: 10px;
+}
+
+.archived-leaderboard .archived-week {
+    border-top-color: #efd8a5;
 }
 
 .compact-empty {

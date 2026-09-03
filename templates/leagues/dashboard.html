@@ -64,7 +64,7 @@
             </div>
 
             <div class="dashboard-leaderboards">
-                <div class="mini-leaderboard">
+                <div class="mini-leaderboard current-week-leaderboard">
                     <div class="mini-leaderboard-heading">
                         <strong>Current week</strong>
                         <span>{{ dashboard_leaderboards.week_start|date:"d M" }} - {{ dashboard_leaderboards.week_end|date:"d M" }}</span>
@@ -97,7 +97,7 @@
                     {% endif %}
                 </div>
 
-                <div class="mini-leaderboard">
+                <div class="mini-leaderboard lifetime-leaderboard">
                     <div class="mini-leaderboard-heading">
                         <strong>Lifetime</strong>
                         <span>Total points and exact scores</span>
