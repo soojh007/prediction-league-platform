@@ -123,13 +123,12 @@ def home(request):
     target_league = get_host_league(request)
 
     if request.user.is_authenticated:
-        if request.user.is_staff or request.user.is_superuser:
-            return redirect('dashboard')
         if target_league is not None:
+            if request.user.is_staff or request.user.is_superuser:
+                return redirect('dashboard')
             if LeagueMembership.objects.filter(league=target_league, user=request.user).exists():
                 return redirect(target_league)
             return render_public_league_landing(request, target_league)
-        return redirect('dashboard')
 
     if target_league is not None:
         return public_league_landing(request, target_league.slug)

@@ -354,6 +354,118 @@ h2 {
     font-weight: 900;
 }
 
+.game-lobby {
+    margin-top: 16px;
+}
+
+.game-card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.game-card {
+    display: grid;
+    min-height: 230px;
+    align-content: space-between;
+    gap: 22px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background:
+        linear-gradient(180deg, rgba(7, 10, 16, 0.16), rgba(7, 10, 16, 0.78)),
+        var(--surface);
+    color: #fff;
+    padding: 22px;
+    text-decoration: none;
+    transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.game-card:hover,
+.game-card:focus {
+    border-color: #9ab4d5;
+    box-shadow: 0 14px 30px rgba(16, 24, 40, 0.16);
+    outline: none;
+    text-decoration: none;
+    transform: translateY(-2px);
+}
+
+.game-card-spl {
+    background:
+        linear-gradient(180deg, rgba(7, 10, 16, 0.12), rgba(7, 10, 16, 0.82)),
+        url("/static/leagues/spl-stadium.png") center / cover;
+}
+
+.game-card-markets {
+    background:
+        linear-gradient(180deg, rgba(7, 10, 16, 0.08), rgba(7, 10, 16, 0.84)),
+        url("/static/leagues/pl-stadium.png") center / cover;
+}
+
+.game-card .eyebrow {
+    color: #d7e5ff;
+}
+
+.game-card h3 {
+    max-width: 520px;
+    margin: 0 0 8px;
+    font-size: 26px;
+    line-height: 1.12;
+}
+
+.game-card p:not(.eyebrow) {
+    max-width: 560px;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.45;
+}
+
+.game-card > span {
+    display: inline-flex;
+    width: fit-content;
+    align-items: center;
+    border-radius: 6px;
+    background: #fff;
+    color: var(--ink);
+    padding: 10px 12px;
+    font-weight: 900;
+}
+
+.platform-league-list {
+    margin-top: 16px;
+}
+
+.platform-contact-panel {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 14px;
+}
+
+.platform-contact-panel > div {
+    display: grid;
+    align-content: start;
+    gap: 8px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+    padding: 18px;
+}
+
+.platform-contact-panel h2 {
+    font-size: 20px;
+}
+
+.platform-contact-panel p:not(.eyebrow) {
+    margin: 0 0 8px;
+    color: var(--muted);
+    line-height: 1.45;
+}
+
+.platform-contact-panel .secondary-button {
+    width: fit-content;
+}
+
 .supporter-callout {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
@@ -1773,6 +1885,8 @@ textarea {
     }
 
     .feature-grid,
+    .game-card-grid,
+    .platform-contact-panel,
     .dashboard-grid,
     .player-dashboard-grid,
     .profile-grid,
@@ -1948,6 +2062,15 @@ textarea {
         display: grid;
         grid-template-columns: 1fr;
         width: 100%;
+    }
+
+    .game-card {
+        min-height: 250px;
+        padding: 18px;
+    }
+
+    .game-card h3 {
+        font-size: 23px;
     }
 
     .league-card,

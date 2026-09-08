@@ -1,8 +1,9 @@
 {% extends "base.html" %}
 
-{% block title %}{% if league %}{{ league.name }}{% else %}Prediction League Platform{% endif %}{% endblock %}
+{% block title %}{% if league %}{{ league.name }}{% else %}Prediction League{% endif %}{% endblock %}
 
 {% block content %}
+{% if league %}
 <section class="hero{% if not league %} hero-platform{% elif league.competition.name == 'Premier League' %} hero-premier-league{% elif league.competition.name == 'Singapore Premier League' %} hero-singapore-premier-league{% endif %}">
     <div>
         <p class="eyebrow">
@@ -16,7 +17,7 @@
             {% if league and league.landing_headline %}
                 {{ league.landing_headline }}
             {% else %}
-                Pick your league. Predict the matches. Climb the table.
+                Pick your game. Predict the football. Climb the table.
             {% endif %}
         </h1>
         <p>
@@ -33,7 +34,7 @@
                     Join {{ league.name }} and make predictions on the featured matches selected for your group.
                 {% endif %}
             {% else %}
-                Choose the competition you want to play in and compete with friends on a clean mobile-first leaderboard.
+                Two active football games live here: a season-long SPL score predictor and an EPL markets game with virtual cash.
             {% endif %}
         </p>
         <div class="hero-actions">
@@ -57,32 +58,54 @@
                 {% endif %}
                 <a class="secondary-button" href="{% url 'league_rules' league.slug %}">Scoring rules</a>
             {% else %}
-                <a class="primary-button" href="#available-leagues">Choose a league</a>
-                <a class="secondary-button" href="{% url 'login' %}">Player login</a>
+                <a class="primary-button" href="#available-games">Choose a game</a>
+                <a class="secondary-button" href="{% url 'login' %}">SPL player login</a>
             {% endif %}
         </div>
     </div>
 </section>
+{% endif %}
 
 {% if not league %}
-<section class="panel" id="available-leagues">
-    <p class="eyebrow">Available leagues</p>
-    <h2>Pick your competition</h2>
-    <div class="league-list">
-        {% for available_league in available_leagues %}
-            <a class="league-card" href="{% url 'public_league_landing' available_league.slug %}">
-                <div class="league-card-title">
-                    <strong>{{ available_league.name }}</strong>
-                    <span>{{ available_league.competition.name }} · {{ available_league.get_prediction_mode_display }}</span>
-                </div>
-                <span>View league</span>
-            </a>
-        {% empty %}
-            <div class="empty-state">
-                <strong>Leagues are being prepared</strong>
-                <span>Public competitions will appear here when registration opens.</span>
+<section class="panel game-lobby" id="available-games">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">Available games</p>
+            <h2>Choose where you want to play</h2>
+        </div>
+    </div>
+    <div class="game-card-grid">
+        <a class="game-card game-card-spl" href="https://spl2627.predictionleague.site/">
+            <div>
+                <p class="eyebrow">Singapore Premier League</p>
+                <h3>2026-27 SPL Prediction League</h3>
+                <p>Predict every SPL fixture, win weekly iJOOZ vouchers, and chase the $200 season champion prize.</p>
             </div>
-        {% endfor %}
+            <span>Enter SPL League</span>
+        </a>
+        <a class="game-card game-card-markets" href="https://play.predictionleague.site/">
+            <div>
+                <p class="eyebrow">Premier League markets</p>
+                <h3>EPL Prediction Markets 2026/27</h3>
+                <p>Trade Yes or No football contracts with virtual cash, then compete for weekly iJOOZ vouchers and the $200 champion prize.</p>
+            </div>
+            <span>Enter EPL Markets</span>
+        </a>
+    </div>
+</section>
+
+<section class="platform-contact-panel">
+    <div>
+        <p class="eyebrow">Private leagues</p>
+        <h2>Run a game for your group</h2>
+        <p>Set up a private prediction league for your office, club, school, or supporter group.</p>
+        <a class="secondary-button" href="mailto:hello@predictionleague.site?subject=Private%20league%20enquiry">Organise a private league</a>
+    </div>
+    <div>
+        <p class="eyebrow">Sponsors</p>
+        <h2>Support the games</h2>
+        <p>Back weekly prizes, season awards, or branded challenges across the Prediction League games.</p>
+        <a class="secondary-button" href="mailto:hello@predictionleague.site?subject=Sponsorship%20enquiry">Sponsor the games</a>
     </div>
 </section>
 {% endif %}
@@ -133,6 +156,7 @@
     </section>
 {% endif %}
 
+{% if league %}
 <section class="feature-grid landing-features">
     <div class="panel">
         <p class="feature-icon">1</p>
@@ -202,4 +226,5 @@
         Enquire
     </a>
 </section>
+{% endif %}
 {% endblock %}

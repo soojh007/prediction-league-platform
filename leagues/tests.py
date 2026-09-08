@@ -531,11 +531,13 @@ class LeagueJoinFlowTests(TestCase):
         self.assertContains(response, 'Arsenal')
         self.assertContains(response, 'Predict now')
 
-    def test_landing_page_links_to_organiser_enquiry_form(self):
+    def test_landing_page_links_to_email_contact_actions(self):
         response = self.client.get(reverse('home'))
 
-        self.assertContains(response, reverse('organiser_enquiry'))
-        self.assertContains(response, 'Enquire')
+        self.assertContains(response, 'mailto:hello@predictionleague.site?subject=Private%20league%20enquiry')
+        self.assertContains(response, 'mailto:hello@predictionleague.site?subject=Sponsorship%20enquiry')
+        self.assertContains(response, 'Organise a private league')
+        self.assertContains(response, 'Sponsor the games')
 
     @override_settings(
         CLOUDFLARE_ANALYTICS_TOKEN='cf-token',

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Prediction League{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'leagues/styles.css' %}?v=20260718-leaderboard-contact">
+    <link rel="stylesheet" href="{% static 'leagues/styles.css' %}?v=20260908-game-lobby">
     {% if cloudflare_analytics_token %}
         <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "{{ cloudflare_analytics_token }}"}'></script>
     {% endif %}
@@ -15,8 +15,10 @@
 </head>
 <body>
     <nav class="topbar">
-        <a class="brand" href="{% url 'home' %}">Prediction League</a>
+        <a class="brand" href="https://predictionleague.site/">Prediction League</a>
         <div class="nav-links">
+            <a href="https://spl2627.predictionleague.site/">SPL</a>
+            <a href="https://play.predictionleague.site/">EPL Markets</a>
             {% if user.is_authenticated %}
                 {% if nav_primary_league %}
                     {% if nav_league_count == 1 %}
@@ -40,11 +42,9 @@
                     <button type="submit">Logout</button>
                 </form>
             {% else %}
-                <a href="{% url 'login' %}">Login</a>
                 {% if nav_host_league %}
+                    <a href="{% url 'login' %}">Login</a>
                     <a class="nav-cta" href="{% url 'signup' %}?league={{ nav_host_league.slug }}">Join league</a>
-                {% else %}
-                    <a class="nav-cta" href="{% url 'home' %}#available-leagues">Join league</a>
                 {% endif %}
             {% endif %}
         </div>
