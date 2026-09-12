@@ -6,7 +6,7 @@
 <div class="predict-layout">
     <section class="panel form-panel">
         <a href="{{ league.get_absolute_url }}">Back to league</a>
-        <p class="eyebrow">Prediction</p>
+        <p class="eyebrow">{% if match.status == 'FINISHED' %}Match details{% else %}Prediction{% endif %}</p>
         <h1 class="match-heading">
             {% include "leagues/partials/team_badge.html" with team=match.home_team %}
             {{ match.home_team.name }} vs
@@ -24,8 +24,20 @@
             <p class="helper-text">{{ match.venue }}</p>
         {% endif %}
 
+        {% if match.status == 'FINISHED' %}
+            <div class="final-score-card">
+                <span>Final score</span>
+                <strong>{{ match.home_score }} - {{ match.away_score }}</strong>
+                <small>{{ match.home_team.name }} {{ match.home_score }} · {{ match.away_team.name }} {{ match.away_score }}</small>
+            </div>
+        {% endif %}
+
         {% if is_locked %}
-            <p class="helper-text">This match has kicked off, so predictions are locked.</p>
+            {% if match.status == 'FINISHED' %}
+                <p class="helper-text">This match is finished. Scorers and detailed events can be added here when available from the data feed.</p>
+            {% else %}
+                <p class="helper-text">This match has kicked off, so predictions are locked.</p>
+            {% endif %}
             {% if prediction %}
                 <div class="locked-prediction">
                     <span>Your prediction</span>

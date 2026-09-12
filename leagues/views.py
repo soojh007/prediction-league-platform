@@ -871,7 +871,8 @@ def league_detail(request, pk):
     has_predictions = Prediction.objects.filter(user=request.user, league=league).exists()
     leaderboard = build_leaderboard(league)
     league_status = build_league_status(request.user, league, matches, predictions, leaderboard)
-    matchdays = build_matchdays(matches, open_match_limit=4)
+    _, current_week_end = get_leaderboard_week(timezone.localtime())
+    matchdays = build_matchdays(matches, open_match_limit=4, hide_from=current_week_end)
     now = timezone.now()
     notices = (
         LeagueNotice.objects
@@ -1385,13 +1386,15 @@ def build_league_status(user, league, matches, predictions, leaderboard):
     }
 
 
-def build_matchdays(matches, open_match_limit=None):
+def build_matchdays(matches, open_match_limit=None, hide_from=None):
     grouped = []
     current_key = None
     current_group = None
     visible_open_matches = 0
 
     for match in matches:
+        if hide_from is not None and timezone.localtime(match.kickoff_time) >= hide_from:
+            continue
         match.deadline_label = match_deadline_label(match)
         match.is_locked = is_match_locked(match)
         match_date = timezone.localtime(match.kickoff_time).date()

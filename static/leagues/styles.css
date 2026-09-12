@@ -900,6 +900,28 @@ textarea {
     font-weight: 700;
 }
 
+.final-score-card {
+    display: grid;
+    gap: 4px;
+    border: 1px solid #a8d9c4;
+    border-radius: var(--radius);
+    background: #f1fbf7;
+    padding: 14px;
+    box-shadow: inset 4px 0 0 var(--green);
+}
+
+.final-score-card span,
+.final-score-card small {
+    color: var(--muted);
+    font-weight: 800;
+}
+
+.final-score-card strong {
+    color: var(--ink);
+    font-size: 34px;
+    line-height: 1;
+}
+
 .sync-status {
     display: grid;
     gap: 4px;

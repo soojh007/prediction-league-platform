@@ -15,10 +15,12 @@
 </head>
 <body>
     <nav class="topbar">
-        <a class="brand" href="https://predictionleague.site/">Prediction League</a>
+        <a class="brand" href="{% if nav_host_league and user.is_authenticated %}{{ nav_host_league.get_absolute_url }}{% elif nav_host_league %}{% url 'public_league_landing' nav_host_league.slug %}{% else %}https://predictionleague.site/{% endif %}">Prediction League</a>
         <div class="nav-links">
-            <a href="https://spl2627.predictionleague.site/">SPL</a>
-            <a href="https://play.predictionleague.site/">EPL Markets</a>
+            {% if not nav_host_league %}
+                <a href="https://spl2627.predictionleague.site/">SPL</a>
+                <a href="https://play.predictionleague.site/">EPL Markets</a>
+            {% endif %}
             {% if user.is_authenticated %}
                 {% if nav_primary_league %}
                     {% if nav_league_count == 1 %}

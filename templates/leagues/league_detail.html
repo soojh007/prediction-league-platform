@@ -153,8 +153,10 @@
                                         <span class="deadline-pill locked">Does not count</span>
                                     {% endif %}
                                 </div>
-                                {% if match.is_locked %}
-                                    <span class="disabled-button">{{ match.deadline_label }}</span>
+                                {% if match.status == 'FINISHED' %}
+                                    <a class="predict-button match-details-button" href="{% url 'predict' league.pk match.pk %}">Match details</a>
+                                {% elif match.is_locked %}
+                                    <a class="predict-button match-details-button" href="{% url 'predict' league.pk match.pk %}">View pick</a>
                                 {% else %}
                                     <a class="predict-button" href="{% url 'predict' league.pk match.pk %}">
                                         {% if match.id in predictions %}Edit{% else %}Predict{% endif %}

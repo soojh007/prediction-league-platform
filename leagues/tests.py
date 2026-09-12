@@ -147,6 +147,84 @@ class LeagueJoinFlowTests(TestCase):
         self.assertContains(response, '<strong>2</strong>', html=True)
         self.assertContains(response, '<strong>1</strong>', html=True)
 
+    @override_settings(ALLOWED_HOSTS=['spl2627.predictionleague.site'])
+    def test_spl_host_navigation_stays_inside_spl_game(self):
+        self.spl.prediction_mode = PrivateLeague.PredictionMode.ALL
+        self.spl.save()
+        LeagueMembership.objects.create(league=self.spl, user=self.player)
+
+        self.client.force_login(self.player)
+        response = self.client.get(self.spl.get_absolute_url(), HTTP_HOST='spl2627.predictionleague.site')
+
+        self.assertContains(response, f'class="brand" href="{self.spl.get_absolute_url()}"')
+        self.assertContains(response, 'My league')
+        self.assertContains(response, 'Dashboard')
+        self.assertContains(response, 'Profile')
+        self.assertNotContains(response, 'EPL Markets')
+        self.assertNotContains(response, 'href="https://predictionleague.site/"')
+
+    def test_league_detail_hides_matchdays_from_future_weeks(self):
+        self.spl.prediction_mode = PrivateLeague.PredictionMode.ALL
+        self.spl.save()
+        home = Team.objects.create(competition=self.spl.competition, name='Tampines Rovers')
+        away = Team.objects.create(competition=self.spl.competition, name='Balestier Khalsa')
+        now = timezone.localtime()
+        days_since_tuesday = (now.weekday() - 1) % 7
+        week_start = (now - timezone.timedelta(days=days_since_tuesday)).replace(hour=0, minute=0, second=0, microsecond=0)
+        week_end = week_start + timezone.timedelta(days=7)
+        Match.objects.create(
+            competition=self.spl.competition,
+            home_team=home,
+            away_team=away,
+            kickoff_time=week_start + timezone.timedelta(days=1),
+            status=Match.Status.FINISHED,
+            home_score=2,
+            away_score=1,
+            stage='1',
+        )
+        Match.objects.create(
+            competition=self.spl.competition,
+            home_team=away,
+            away_team=home,
+            kickoff_time=week_end + timezone.timedelta(days=1),
+            status=Match.Status.UPCOMING,
+            stage='2',
+        )
+        LeagueMembership.objects.create(league=self.spl, user=self.player)
+
+        self.client.force_login(self.player)
+        response = self.client.get(self.spl.get_absolute_url())
+
+        self.assertContains(response, 'Match day 1')
+        self.assertNotContains(response, 'Match day 2')
+
+    def test_finished_match_links_to_match_details_with_final_score(self):
+        self.spl.prediction_mode = PrivateLeague.PredictionMode.ALL
+        self.spl.save()
+        home = Team.objects.create(competition=self.spl.competition, name='Tampines Rovers')
+        away = Team.objects.create(competition=self.spl.competition, name='Balestier Khalsa')
+        match = Match.objects.create(
+            competition=self.spl.competition,
+            home_team=home,
+            away_team=away,
+            kickoff_time=timezone.now() - timezone.timedelta(days=1),
+            status=Match.Status.FINISHED,
+            home_score=2,
+            away_score=1,
+            stage='1',
+        )
+        LeagueMembership.objects.create(league=self.spl, user=self.player)
+
+        self.client.force_login(self.player)
+        response = self.client.get(self.spl.get_absolute_url())
+
+        self.assertContains(response, 'Match details')
+        self.assertContains(response, reverse('predict', args=[self.spl.pk, match.pk]))
+
+        details_response = self.client.get(reverse('predict', args=[self.spl.pk, match.pk]))
+        self.assertContains(details_response, 'Final score')
+        self.assertContains(details_response, '2 - 1')
+
     def test_league_detail_shows_active_noticeboard_messages(self):
         self.spl.prediction_mode = PrivateLeague.PredictionMode.ALL
         self.spl.save()
