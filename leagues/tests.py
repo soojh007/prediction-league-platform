@@ -1,4 +1,4 @@
-from datetime import datetime, timezone as datetime_timezone
+from datetime import date, datetime, timezone as datetime_timezone
 from io import StringIO
 from unittest.mock import patch
 from django.contrib.auth.models import User
@@ -865,6 +865,27 @@ class LeagueJoinFlowTests(TestCase):
         prediction.refresh_from_db()
         self.assertEqual(prediction.points, 7)
         self.assertIn('Recalculated: 1 prediction', out.getvalue())
+
+    def test_sync_recent_api_fixtures_uses_rolling_date_window(self):
+        out = StringIO()
+        with patch('leagues.management.commands.sync_recent_api_fixtures.timezone.localdate', return_value=date(2026, 9, 13)):
+            with patch('leagues.management.commands.sync_recent_api_fixtures.call_command') as sync_call:
+                call_command(
+                    'sync_recent_api_fixtures',
+                    private_league_id=self.spl.id,
+                    days_back=2,
+                    days_ahead=1,
+                    stdout=out,
+                )
+
+        sync_call.assert_called_once()
+        sync_args, sync_kwargs = sync_call.call_args
+        self.assertEqual(sync_args, ('sync_api_fixtures',))
+        self.assertEqual(sync_kwargs['from_date'], '2026-09-11')
+        self.assertEqual(sync_kwargs['to_date'], '2026-09-14')
+        self.assertFalse(sync_kwargs['with_teams'])
+        self.assertEqual(sync_kwargs['private_league_id'], self.spl.id)
+        self.assertIn('Syncing API fixtures from 2026-09-11 to 2026-09-14.', out.getvalue())
 
     def test_sportmonks_event_error_does_not_block_score_sync(self):
         self.spl.competition.api_league_id = 1357
