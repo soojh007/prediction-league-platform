@@ -274,6 +274,7 @@ class SportMonksSyncService:
             'match_ids': [],
             'finished_match_ids': [],
             'event_count': 0,
+            'event_errors': 0,
         }
 
         for item in self.client.fixtures(season_id):
@@ -335,15 +336,18 @@ class SportMonksSyncService:
             stats['match_ids'].append(match.id)
             if is_finished:
                 stats['finished_match_ids'].append(match.id)
-                stats['event_count'] += self._sync_finished_match_events(
-                    match=match,
-                    fixture_id=fixture_id,
-                    fixture_data=item,
-                    home_team=home_team,
-                    away_team=away_team,
-                    home_data=home_data,
-                    away_data=away_data,
-                )
+                try:
+                    stats['event_count'] += self._sync_finished_match_events(
+                        match=match,
+                        fixture_id=fixture_id,
+                        fixture_data=item,
+                        home_team=home_team,
+                        away_team=away_team,
+                        home_data=home_data,
+                        away_data=away_data,
+                    )
+                except SportMonksError:
+                    stats['event_errors'] += 1
             if created:
                 stats['created'] += 1
             else:

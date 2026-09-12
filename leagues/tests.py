@@ -11,7 +11,7 @@ from django.utils import timezone
 from tempfile import NamedTemporaryFile
 
 from .models import Competition, LeagueMembership, LeagueNotice, Match, MatchEvent, OrganiserEnquiry, Prediction, PrivateLeague, Team
-from .services.sportmonks import SportMonksClient, SportMonksSyncService
+from .services.sportmonks import SportMonksClient, SportMonksError, SportMonksSyncService
 
 
 class LeagueJoinFlowTests(TestCase):
@@ -865,6 +865,50 @@ class LeagueJoinFlowTests(TestCase):
         prediction.refresh_from_db()
         self.assertEqual(prediction.points, 7)
         self.assertIn('Recalculated: 1 prediction', out.getvalue())
+
+    def test_sportmonks_event_error_does_not_block_score_sync(self):
+        self.spl.competition.api_league_id = 1357
+        self.spl.competition.api_season_id = 28091
+        self.spl.competition.save(update_fields=['api_league_id', 'api_season_id'])
+        home = Team.objects.create(competition=self.spl.competition, name='Tampines Rovers', api_team_id=8105)
+        away = Team.objects.create(competition=self.spl.competition, name='Balestier Khalsa', api_team_id=8095)
+        match = Match.objects.create(
+            competition=self.spl.competition,
+            api_fixture_id=19778330,
+            home_team=home,
+            away_team=away,
+            kickoff_time=timezone.now() - timezone.timedelta(hours=1),
+            status=Match.Status.UPCOMING,
+        )
+
+        class FakeSportMonksClient:
+            def fixtures(self, season_id):
+                return [{
+                    'id': 19778330,
+                    'starting_at': match.kickoff_time.isoformat(),
+                    'state_id': 5,
+                    'state': {'short_name': 'FT'},
+                    'participants': [
+                        {'id': 8105, 'name': 'Tampines Rovers', 'meta': {'location': 'home'}},
+                        {'id': 8095, 'name': 'Balestier Khalsa', 'meta': {'location': 'away'}},
+                    ],
+                    'scores': [
+                        {'participant_id': 8105, 'description': 'CURRENT', 'score': {'goals': 1, 'participant': 'home'}},
+                        {'participant_id': 8095, 'description': 'CURRENT', 'score': {'goals': 0, 'participant': 'away'}},
+                    ],
+                }]
+
+            def fixture(self, fixture_id):
+                raise SportMonksError('Event feed unavailable')
+
+        service = SportMonksSyncService(client=FakeSportMonksClient())
+        stats = service.sync_fixtures(self.spl.competition)
+        match.refresh_from_db()
+
+        self.assertEqual(stats['event_errors'], 1)
+        self.assertEqual(match.status, Match.Status.FINISHED)
+        self.assertEqual(match.home_score, 1)
+        self.assertEqual(match.away_score, 0)
 
     def test_sportmonks_sync_keeps_local_spl_team_branding(self):
         self.spl.competition.api_league_id = 1357
