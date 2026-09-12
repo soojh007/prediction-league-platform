@@ -163,7 +163,7 @@ class LeagueJoinFlowTests(TestCase):
         self.assertNotContains(response, 'EPL Markets')
         self.assertNotContains(response, 'href="https://predictionleague.site/"')
 
-    def test_league_detail_hides_matchdays_from_future_weeks(self):
+    def test_league_detail_collapses_matchdays_outside_current_week(self):
         self.spl.prediction_mode = PrivateLeague.PredictionMode.ALL
         self.spl.save()
         home = Team.objects.create(competition=self.spl.competition, name='Tampines Rovers')
@@ -177,9 +177,7 @@ class LeagueJoinFlowTests(TestCase):
             home_team=home,
             away_team=away,
             kickoff_time=week_start + timezone.timedelta(days=1),
-            status=Match.Status.FINISHED,
-            home_score=2,
-            away_score=1,
+            status=Match.Status.UPCOMING,
             stage='1',
         )
         Match.objects.create(
@@ -190,13 +188,28 @@ class LeagueJoinFlowTests(TestCase):
             status=Match.Status.UPCOMING,
             stage='2',
         )
+        Match.objects.create(
+            competition=self.spl.competition,
+            home_team=home,
+            away_team=away,
+            kickoff_time=week_start - timezone.timedelta(days=2),
+            status=Match.Status.FINISHED,
+            home_score=2,
+            away_score=1,
+            stage='Community Shield',
+            counts_towards_league=False,
+        )
         LeagueMembership.objects.create(league=self.spl, user=self.player)
 
         self.client.force_login(self.player)
         response = self.client.get(self.spl.get_absolute_url())
+        matchdays = response.context['matchdays']
 
         self.assertContains(response, 'Match day 1')
-        self.assertNotContains(response, 'Match day 2')
+        self.assertContains(response, 'Match day 2')
+        self.assertFalse(next(matchday for matchday in matchdays if matchday['title'] == 'Match day 1')['collapsed'])
+        self.assertTrue(next(matchday for matchday in matchdays if matchday['title'] == 'Match day 2')['collapsed'])
+        self.assertEqual([matchday['title'] for matchday in matchdays], ['Match day 1', 'Match day 2', 'Community Shield'])
 
     def test_finished_match_links_to_match_details_with_final_score(self):
         self.spl.prediction_mode = PrivateLeague.PredictionMode.ALL

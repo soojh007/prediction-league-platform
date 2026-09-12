@@ -871,8 +871,8 @@ def league_detail(request, pk):
     has_predictions = Prediction.objects.filter(user=request.user, league=league).exists()
     leaderboard = build_leaderboard(league)
     league_status = build_league_status(request.user, league, matches, predictions, leaderboard)
-    _, current_week_end = get_leaderboard_week(timezone.localtime())
-    matchdays = build_matchdays(matches, open_match_limit=4, hide_from=current_week_end)
+    current_week_start, current_week_end = get_leaderboard_week(timezone.localtime())
+    matchdays = build_matchdays(matches, open_from=current_week_start, open_until=current_week_end)
     now = timezone.now()
     notices = (
         LeagueNotice.objects
@@ -1396,26 +1396,34 @@ def build_league_status(user, league, matches, predictions, leaderboard):
     }
 
 
-def build_matchdays(matches, open_match_limit=None, hide_from=None):
+def build_matchdays(matches, open_match_limit=None, open_from=None, open_until=None):
     grouped = []
     current_key = None
     current_group = None
     visible_open_matches = 0
 
     for match in matches:
-        if hide_from is not None and timezone.localtime(match.kickoff_time) >= hide_from:
-            continue
         match.deadline_label = match_deadline_label(match)
         match.is_locked = is_match_locked(match)
-        match_date = timezone.localtime(match.kickoff_time).date()
+        local_kickoff = timezone.localtime(match.kickoff_time)
+        match_date = local_kickoff.date()
         group_key, group_title = matchday_group_label(match, match_date)
         if group_key != current_key:
+            is_current_window = (
+                open_from is not None
+                and open_until is not None
+                and open_from <= local_kickoff < open_until
+            )
+            if open_from is not None and open_until is not None:
+                collapsed = not is_current_window
+            else:
+                collapsed = bool(open_match_limit is not None and visible_open_matches >= open_match_limit)
             current_key = group_key
             current_group = {
                 'date': match_date,
                 'title': group_title,
                 'matches': [],
-                'collapsed': bool(open_match_limit is not None and visible_open_matches >= open_match_limit),
+                'collapsed': collapsed,
             }
             grouped.append(current_group)
 
@@ -1424,7 +1432,10 @@ def build_matchdays(matches, open_match_limit=None, hide_from=None):
 
         current_group['matches'].append(match)
 
-    return grouped
+    for group in grouped:
+        group['is_complete'] = all(match.status == Match.Status.FINISHED for match in group['matches'])
+
+    return sorted(grouped, key=lambda group: (group['is_complete'], group['date']))
 
 
 def matchday_group_label(match, match_date):
