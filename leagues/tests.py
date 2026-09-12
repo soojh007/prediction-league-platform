@@ -434,6 +434,9 @@ class LeagueJoinFlowTests(TestCase):
         self.assertContains(response, 'Show all lifetime players')
         self.assertContains(response, 'Archived weekly top 3')
         self.assertContains(response, 'Top 3')
+        self.assertContains(response, '<span class="rank">6</span>', html=True)
+        self.assertEqual(response.context['dashboard_leaderboards']['weekly_extra'][0]['rank'], 6)
+        self.assertEqual(response.context['dashboard_leaderboards']['lifetime_extra'][0]['rank'], 6)
 
     def test_leaderboard_detail_shows_player_breakdown(self):
         self.epl.prediction_mode = PrivateLeague.PredictionMode.SUPPORTER

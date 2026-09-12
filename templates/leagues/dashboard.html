@@ -81,15 +81,15 @@
                             <span>This week’s ranking will appear once matches are settled.</span>
                         </div>
                     {% endfor %}
-                    {% if dashboard_leaderboards.weekly_all|length > dashboard_leaderboards.weekly|length %}
+                    {% if dashboard_leaderboards.weekly_extra %}
                         <details class="leaderboard-expander">
                             <summary>Show all current week players</summary>
                             <div class="leaderboard-expander-list">
-                                {% for row in dashboard_leaderboards.weekly_all %}
-                                    <a class="mini-leaderboard-row" href="{% url 'leaderboard_detail' dashboard_leaderboards.league.pk row.user.pk %}">
-                                        <span class="rank">{{ forloop.counter }}</span>
-                                        <strong>{{ row.display_name }}</strong>
-                                        <span>{{ row.total_points }} pts · {{ row.exact_scores }} exact</span>
+                                {% for item in dashboard_leaderboards.weekly_extra %}
+                                    <a class="mini-leaderboard-row" href="{% url 'leaderboard_detail' dashboard_leaderboards.league.pk item.row.user.pk %}">
+                                        <span class="rank">{{ item.rank }}</span>
+                                        <strong>{{ item.row.display_name }}</strong>
+                                        <span>{{ item.row.total_points }} pts · {{ item.row.exact_scores }} exact</span>
                                     </a>
                                 {% endfor %}
                             </div>
@@ -114,15 +114,15 @@
                             <span>Players will appear here once predictions have points.</span>
                         </div>
                     {% endfor %}
-                    {% if dashboard_leaderboards.lifetime_all|length > dashboard_leaderboards.lifetime|length %}
+                    {% if dashboard_leaderboards.lifetime_extra %}
                         <details class="leaderboard-expander">
                             <summary>Show all lifetime players</summary>
                             <div class="leaderboard-expander-list">
-                                {% for row in dashboard_leaderboards.lifetime_all %}
-                                    <a class="mini-leaderboard-row" href="{% url 'leaderboard_detail' dashboard_leaderboards.league.pk row.user.pk %}">
-                                        <span class="rank">{{ forloop.counter }}</span>
-                                        <strong>{{ row.display_name }}</strong>
-                                        <span>{{ row.total_points }} pts · {{ row.exact_scores }} exact</span>
+                                {% for item in dashboard_leaderboards.lifetime_extra %}
+                                    <a class="mini-leaderboard-row" href="{% url 'leaderboard_detail' dashboard_leaderboards.league.pk item.row.user.pk %}">
+                                        <span class="rank">{{ item.rank }}</span>
+                                        <strong>{{ item.row.display_name }}</strong>
+                                        <span>{{ item.row.total_points }} pts · {{ item.row.exact_scores }} exact</span>
                                     </a>
                                 {% endfor %}
                             </div>

@@ -1254,11 +1254,21 @@ def build_dashboard_leaderboards(memberships):
         'week_start': week_start,
         'week_end': week_label_end,
         'weekly': current_week[:5],
-        'weekly_all': current_week,
+        'weekly_extra': ranked_leaderboard_rows(current_week[5:], start=6),
         'archived_weeks': build_archived_weekly_leaderboards(league, week_start),
         'lifetime': lifetime[:5],
-        'lifetime_all': lifetime,
+        'lifetime_extra': ranked_leaderboard_rows(lifetime[5:], start=6),
     }
+
+
+def ranked_leaderboard_rows(rows, *, start):
+    return [
+        {
+            'rank': index,
+            'row': row,
+        }
+        for index, row in enumerate(rows, start=start)
+    ]
 
 
 def get_leaderboard_week(now):
