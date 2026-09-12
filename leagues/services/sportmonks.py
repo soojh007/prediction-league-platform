@@ -534,18 +534,25 @@ class SportMonksSyncService:
     def _fixture_score(self, item, home_data, away_data):
         home_score = None
         away_score = None
+        home_priority = None
+        away_priority = None
         for score_item in item.get('scores') or []:
             if not self._is_preferred_score(score_item):
                 continue
+            priority = self._score_priority(score_item)
             score = score_item.get('score') or {}
             goals = score.get('goals')
             participant = (score.get('participant') or '').lower()
             participant_id = score_item.get('participant_id')
 
             if participant == 'home' or participant_id == home_data.get('id'):
-                home_score = goals
+                if home_priority is None or priority < home_priority:
+                    home_score = goals
+                    home_priority = priority
             elif participant == 'away' or participant_id == away_data.get('id'):
-                away_score = goals
+                if away_priority is None or priority < away_priority:
+                    away_score = goals
+                    away_priority = priority
 
         return home_score, away_score
 
@@ -554,6 +561,14 @@ class SportMonksSyncService:
         if not labels:
             return True
         return bool(labels & {'CURRENT', 'FT', 'FULLTIME', 'FULL_TIME', '2ND_HALF', '2ND_HALF_ONLY'})
+
+    def _score_priority(self, score_item):
+        labels = self._labels(score_item)
+        if labels & {'CURRENT', 'FT', 'FULLTIME', 'FULL_TIME'}:
+            return 0
+        if labels & {'2ND_HALF', '2ND_HALF_ONLY'}:
+            return 5
+        return 10
 
     def _is_finished(self, item):
         state = item.get('state') or {}

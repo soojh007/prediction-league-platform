@@ -764,6 +764,16 @@ class LeagueJoinFlowTests(TestCase):
                                 'description': 'CURRENT',
                                 'score': {'goals': 1, 'participant': 'away'},
                             },
+                            {
+                                'participant_id': 1,
+                                'description': '2ND_HALF_ONLY',
+                                'score': {'goals': 0, 'participant': 'home'},
+                            },
+                            {
+                                'participant_id': 2,
+                                'description': '2ND_HALF_ONLY',
+                                'score': {'goals': 1, 'participant': 'away'},
+                            },
                         ],
                     },
                 ]
