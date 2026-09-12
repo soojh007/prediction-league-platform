@@ -10,7 +10,7 @@ from django.urls import reverse
 from django.utils import timezone
 from tempfile import NamedTemporaryFile
 
-from .models import Competition, LeagueMembership, LeagueNotice, Match, OrganiserEnquiry, Prediction, PrivateLeague, Team
+from .models import Competition, LeagueMembership, LeagueNotice, Match, MatchEvent, OrganiserEnquiry, Prediction, PrivateLeague, Team
 from .services.sportmonks import SportMonksClient, SportMonksSyncService
 
 
@@ -226,6 +226,14 @@ class LeagueJoinFlowTests(TestCase):
             away_score=1,
             stage='1',
         )
+        MatchEvent.objects.create(
+            match=match,
+            team=home,
+            minute=64,
+            event_type='Goal',
+            player_name='Ryoya Taniguchi',
+            result='2-1',
+        )
         LeagueMembership.objects.create(league=self.spl, user=self.player)
 
         self.client.force_login(self.player)
@@ -237,6 +245,8 @@ class LeagueJoinFlowTests(TestCase):
         details_response = self.client.get(reverse('predict', args=[self.spl.pk, match.pk]))
         self.assertContains(details_response, 'Final score')
         self.assertContains(details_response, '2 - 1')
+        self.assertContains(details_response, 'Scorers')
+        self.assertContains(details_response, 'Ryoya Taniguchi')
 
     def test_league_detail_shows_active_noticeboard_messages(self):
         self.spl.prediction_mode = PrivateLeague.PredictionMode.ALL
@@ -758,6 +768,29 @@ class LeagueJoinFlowTests(TestCase):
                     },
                 ]
 
+            def fixture(self, fixture_id):
+                self.detail_fixture_id = fixture_id
+                return {
+                    'id': fixture_id,
+                    'events': [
+                        {
+                            'id': 7001,
+                            'minute': 64,
+                            'participant_id': 1,
+                            'type': {'name': 'Goal'},
+                            'player': {'display_name': 'Bukayo Saka'},
+                            'result': '2-1',
+                        },
+                        {
+                            'id': 7002,
+                            'minute': 72,
+                            'participant_id': 2,
+                            'type': {'name': 'Yellowcard'},
+                            'player': {'display_name': 'Moises Caicedo'},
+                        },
+                    ],
+                }
+
         client = FakeSportMonksClient()
         service = SportMonksSyncService(client=client)
 
@@ -768,9 +801,11 @@ class LeagueJoinFlowTests(TestCase):
         self.assertEqual(client.season_year, 2026)
         self.assertEqual(client.season_id, 23690)
         self.assertEqual(client.fixture_season_id, 23690)
+        self.assertEqual(client.detail_fixture_id, 9001)
         self.assertEqual(team_stats, {'checked': 2, 'created': 2, 'updated': 0})
         self.assertEqual(fixture_stats['checked'], 1)
         self.assertEqual(fixture_stats['created'], 1)
+        self.assertEqual(fixture_stats['event_count'], 1)
 
         match = Match.objects.get(api_fixture_id=9001)
         self.assertEqual(match.home_team.name, 'Arsenal')
@@ -780,6 +815,10 @@ class LeagueJoinFlowTests(TestCase):
         self.assertEqual(match.away_score, 1)
         self.assertEqual(match.stage, 'Round 1')
         self.assertEqual(match.venue, 'Emirates Stadium')
+        event = MatchEvent.objects.get(match=match)
+        self.assertEqual(event.minute, 64)
+        self.assertEqual(event.player_name, 'Bukayo Saka')
+        self.assertEqual(event.team.name, 'Arsenal')
 
     def test_sync_api_fixtures_command_recalculates_finished_predictions(self):
         self.spl.prediction_mode = PrivateLeague.PredictionMode.ALL

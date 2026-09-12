@@ -50,6 +50,7 @@ class Command(BaseCommand):
             f'Fixture sync complete for {competition.name} {competition.season}. '
             f"Checked: {stats['checked']}. Created: {stats['created']}. "
             f"Updated: {stats['updated']}. Skipped: {stats['skipped']}. "
+            f"Events: {stats.get('event_count', 0)}. "
             f"Recalculated: {recalculated} prediction(s)."
         ))
 

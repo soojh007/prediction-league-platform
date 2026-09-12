@@ -34,7 +34,31 @@
 
         {% if is_locked %}
             {% if match.status == 'FINISHED' %}
-                <p class="helper-text">This match is finished. Scorers and detailed events can be added here when available from the data feed.</p>
+                <div class="match-events-card">
+                    <span>Scorers</span>
+                    {% if match_info.events %}
+                        <div class="match-event-list">
+                            {% for event in match_info.events %}
+                                <div class="match-event-row">
+                                    <strong>
+                                        {{ event.minute }}{% if event.extra_minute %}+{{ event.extra_minute }}{% endif %}'
+                                    </strong>
+                                    <span>
+                                        {{ event.player_name|default:event.event_type }}
+                                        {% if event.related_player_name %}
+                                            <small>({{ event.related_player_name }})</small>
+                                        {% endif %}
+                                    </span>
+                                    {% if event.team %}
+                                        <em>{{ event.team.name }}</em>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p>SportMonks has not returned scorer events for this fixture yet.</p>
+                    {% endif %}
+                </div>
             {% else %}
                 <p class="helper-text">This match has kicked off, so predictions are locked.</p>
             {% endif %}

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Competition, LeagueMembership, LeagueNotice, Match, OrganiserEnquiry, Prediction, PrivateLeague, Team
+from .models import Competition, LeagueMembership, LeagueNotice, Match, MatchEvent, OrganiserEnquiry, Prediction, PrivateLeague, Team
 
 
 class TeamInline(admin.TabularInline):
@@ -65,6 +65,13 @@ class MatchAdmin(admin.ModelAdmin):
     list_display = ('home_team', 'away_team', 'competition', 'kickoff_time', 'status', 'featured', 'counts_towards_league', 'api_fixture_id')
     list_filter = ('competition', 'status', 'featured', 'counts_towards_league')
     search_fields = ('home_team__name', 'away_team__name', 'venue')
+
+
+@admin.register(MatchEvent)
+class MatchEventAdmin(admin.ModelAdmin):
+    list_display = ('match', 'minute', 'extra_minute', 'event_type', 'player_name', 'team', 'result')
+    list_filter = ('event_type', 'team__competition')
+    search_fields = ('player_name', 'related_player_name', 'match__home_team__name', 'match__away_team__name')
 
 
 @admin.register(Prediction)

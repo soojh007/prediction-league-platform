@@ -492,6 +492,7 @@ def organiser_sync_fixtures(request, pk):
     summary = (
         f"Checked {stats['checked']}, created {stats['created']}, "
         f"updated {stats['updated']}, skipped {stats['skipped']}, "
+        f"synced {stats.get('event_count', 0)} event(s), "
         f"recalculated {recalculated} predictions"
     )
     if team_stats:
@@ -1072,6 +1073,7 @@ def build_match_info(league, match, user):
         'prediction_summary': prediction_summary,
         'home_form': build_team_recent_form(match.competition, match.home_team, match.kickoff_time),
         'away_form': build_team_recent_form(match.competition, match.away_team, match.kickoff_time),
+        'events': match.events.select_related('team').all(),
     }
 
 

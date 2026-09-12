@@ -176,6 +176,25 @@ class Match(models.Model):
         return f'{self.home_team} vs {self.away_team}'
 
 
+class MatchEvent(models.Model):
+    match = models.ForeignKey(Match, on_delete=models.CASCADE, related_name='events')
+    team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True, blank=True, related_name='match_events')
+    api_event_id = models.BigIntegerField(null=True, blank=True, unique=True)
+    minute = models.PositiveSmallIntegerField(null=True, blank=True)
+    extra_minute = models.PositiveSmallIntegerField(null=True, blank=True)
+    event_type = models.CharField(max_length=80)
+    player_name = models.CharField(max_length=120, blank=True)
+    related_player_name = models.CharField(max_length=120, blank=True)
+    result = models.CharField(max_length=20, blank=True)
+
+    class Meta:
+        ordering = ['minute', 'extra_minute', 'id']
+
+    def __str__(self):
+        minute = self.minute if self.minute is not None else '?'
+        return f'{minute}: {self.player_name or self.event_type}'
+
+
 class Prediction(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='predictions')
     league = models.ForeignKey(PrivateLeague, on_delete=models.CASCADE, related_name='predictions')

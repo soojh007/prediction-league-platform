@@ -9,7 +9,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
-from leagues.models import Competition, Match, PrivateLeague, Team
+from leagues.models import Competition, Match, MatchEvent, PrivateLeague, Team
 
 
 API_BASE_URL = 'https://api.sportmonks.com/v3/football'
@@ -119,6 +119,13 @@ class SportMonksClient:
     def fixtures(self, season_id):
         schedule = self.get(f'/schedules/seasons/{season_id}')
         return self._extract_schedule_fixtures(schedule)
+
+    def fixture(self, fixture_id):
+        fixture_data = self.get(
+            f'/fixtures/{fixture_id}',
+            include='events.type;events.player;events.participant',
+        )
+        return fixture_data[0] if fixture_data else None
 
     def _extract_schedule_fixtures(self, schedule):
         fixtures = []
@@ -266,6 +273,7 @@ class SportMonksSyncService:
             'skipped': 0,
             'match_ids': [],
             'finished_match_ids': [],
+            'event_count': 0,
         }
 
         for item in self.client.fixtures(season_id):
@@ -327,12 +335,104 @@ class SportMonksSyncService:
             stats['match_ids'].append(match.id)
             if is_finished:
                 stats['finished_match_ids'].append(match.id)
+                stats['event_count'] += self._sync_finished_match_events(
+                    match=match,
+                    fixture_id=fixture_id,
+                    fixture_data=item,
+                    home_team=home_team,
+                    away_team=away_team,
+                    home_data=home_data,
+                    away_data=away_data,
+                )
             if created:
                 stats['created'] += 1
             else:
                 stats['updated'] += 1
 
         return stats
+
+    def _sync_finished_match_events(self, *, match, fixture_id, fixture_data, home_team, away_team, home_data, away_data):
+        detailed_fixture = None
+        if hasattr(self.client, 'fixture'):
+            detailed_fixture = self.client.fixture(fixture_id)
+        source = detailed_fixture or fixture_data
+        if 'events' not in source:
+            return 0
+
+        events = [
+            event for event in (
+                self._event_from_api_event(
+                    event,
+                    match=match,
+                    home_team=home_team,
+                    away_team=away_team,
+                    home_data=home_data,
+                    away_data=away_data,
+                )
+                for event in source.get('events') or []
+            )
+            if event is not None
+        ]
+
+        MatchEvent.objects.filter(match=match).delete()
+        MatchEvent.objects.bulk_create(events)
+        return len(events)
+
+    def _event_from_api_event(self, event, *, match, home_team, away_team, home_data, away_data):
+        event_type = self._event_type(event)
+        if not self._is_goal_event(event_type):
+            return None
+
+        participant_id = event.get('participant_id') or (event.get('participant') or {}).get('id')
+        team = None
+        if participant_id == home_data.get('id'):
+            team = home_team
+        elif participant_id == away_data.get('id'):
+            team = away_team
+
+        return MatchEvent(
+            match=match,
+            team=team,
+            api_event_id=event.get('id'),
+            minute=event.get('minute'),
+            extra_minute=event.get('extra_minute') or event.get('extra_time'),
+            event_type=event_type or 'Goal',
+            player_name=self._event_player_name(event),
+            related_player_name=self._event_related_player_name(event),
+            result=event.get('result') or '',
+        )
+
+    def _event_type(self, event):
+        event_type = event.get('type') or {}
+        if isinstance(event_type, dict):
+            for key in ('name', 'short_name', 'code', 'developer_name'):
+                value = event_type.get(key)
+                if value:
+                    return str(value)
+        return str(event_type or event.get('type_code') or event.get('event_type') or '')
+
+    def _is_goal_event(self, event_type):
+        normalised = event_type.upper().replace('-', '_').replace(' ', '_')
+        return 'GOAL' in normalised or normalised in {'PENALTY', 'PENALTY_SCORED'}
+
+    def _event_player_name(self, event):
+        player = event.get('player') or {}
+        return (
+            event.get('player_name')
+            or event.get('player_display_name')
+            or player.get('display_name')
+            or player.get('name')
+            or ''
+        )
+
+    def _event_related_player_name(self, event):
+        related_player = event.get('related_player') or {}
+        return (
+            event.get('related_player_name')
+            or related_player.get('display_name')
+            or related_player.get('name')
+            or ''
+        )
 
     def _find_manual_match_for_api_fixture(self, *, competition, home_team, away_team, kickoff):
         api_match_date = timezone.localtime(kickoff).date()
