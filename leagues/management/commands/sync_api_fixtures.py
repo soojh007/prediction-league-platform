@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.core.exceptions import ImproperlyConfigured
 
+from leagues.models import Prediction, PrivateLeague
 from leagues.services.sportmonks import SportMonksError, SportMonksSyncService, resolve_competition
 
 
@@ -40,8 +41,32 @@ class Command(BaseCommand):
             self.stdout.write(
                 f"Team sync checked {team_stats['checked']}, created {team_stats['created']}, updated {team_stats['updated']}."
             )
+        recalculated = self._recalculate_finished_match_points(
+            competition,
+            private_league_id=options.get('private_league_id'),
+            match_ids=stats['finished_match_ids'],
+        )
         self.stdout.write(self.style.SUCCESS(
             f'Fixture sync complete for {competition.name} {competition.season}. '
             f"Checked: {stats['checked']}. Created: {stats['created']}. "
-            f"Updated: {stats['updated']}. Skipped: {stats['skipped']}."
+            f"Updated: {stats['updated']}. Skipped: {stats['skipped']}. "
+            f"Recalculated: {recalculated} prediction(s)."
         ))
+
+    def _recalculate_finished_match_points(self, competition, *, private_league_id, match_ids):
+        if not match_ids:
+            return 0
+
+        leagues = PrivateLeague.objects.filter(competition=competition)
+        if private_league_id:
+            leagues = leagues.filter(pk=private_league_id)
+
+        count = 0
+        predictions = Prediction.objects.filter(
+            league__in=leagues,
+            match_id__in=match_ids,
+        ).select_related('match')
+        for prediction in predictions:
+            prediction.save()
+            count += 1
+        return count

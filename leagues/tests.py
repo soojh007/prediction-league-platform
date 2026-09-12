@@ -1,5 +1,6 @@
 from datetime import datetime, timezone as datetime_timezone
 from io import StringIO
+from unittest.mock import patch
 from django.contrib.auth.models import User
 from django.core import mail
 from django.core.management import call_command
@@ -685,6 +686,52 @@ class LeagueJoinFlowTests(TestCase):
         self.assertEqual(match.away_score, 1)
         self.assertEqual(match.stage, 'Round 1')
         self.assertEqual(match.venue, 'Emirates Stadium')
+
+    def test_sync_api_fixtures_command_recalculates_finished_predictions(self):
+        self.spl.prediction_mode = PrivateLeague.PredictionMode.ALL
+        self.spl.competition.api_league_id = 1357
+        self.spl.save()
+        self.spl.competition.save(update_fields=['api_league_id'])
+        home = Team.objects.create(competition=self.spl.competition, name='Tampines Rovers')
+        away = Team.objects.create(competition=self.spl.competition, name='Balestier Khalsa')
+        match = Match.objects.create(
+            competition=self.spl.competition,
+            api_fixture_id=19778330,
+            home_team=home,
+            away_team=away,
+            kickoff_time=timezone.now() - timezone.timedelta(hours=1),
+            status=Match.Status.UPCOMING,
+        )
+        prediction = Prediction.objects.create(
+            user=self.player,
+            league=self.spl,
+            match=match,
+            predicted_home_score=2,
+            predicted_away_score=1,
+        )
+
+        class FakeSyncService:
+            def sync_fixtures(self, competition, *, from_date=None, to_date=None):
+                match.status = Match.Status.FINISHED
+                match.home_score = 2
+                match.away_score = 1
+                match.save(update_fields=['status', 'home_score', 'away_score'])
+                return {
+                    'checked': 1,
+                    'created': 0,
+                    'updated': 1,
+                    'skipped': 0,
+                    'match_ids': [match.id],
+                    'finished_match_ids': [match.id],
+                }
+
+        out = StringIO()
+        with patch('leagues.management.commands.sync_api_fixtures.SportMonksSyncService', FakeSyncService):
+            call_command('sync_api_fixtures', private_league_id=self.spl.id, stdout=out)
+
+        prediction.refresh_from_db()
+        self.assertEqual(prediction.points, 7)
+        self.assertIn('Recalculated: 1 prediction', out.getvalue())
 
     def test_sportmonks_sync_keeps_local_spl_team_branding(self):
         self.spl.competition.api_league_id = 1357
