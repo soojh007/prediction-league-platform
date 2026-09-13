@@ -37,7 +37,7 @@ services:
     runtime: python
     schedule: "*/30 * * * *"
     buildCommand: ./build.sh
-    startCommand: python manage.py sync_recent_api_fixtures --private-league-id 2 --days-back 1 --days-ahead 1
+    startCommand: python manage.py sync_recent_api_fixtures --private-league-id 2 --current-week
     envVars:
       - key: PYTHON_VERSION
         value: "3.12.4"

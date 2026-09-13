@@ -12,6 +12,11 @@ class Command(BaseCommand):
         parser.add_argument('--days-back', type=int, default=1, help='Days before today to include.')
         parser.add_argument('--days-ahead', type=int, default=1, help='Days after today to include.')
         parser.add_argument(
+            '--current-week',
+            action='store_true',
+            help='Sync the current Tuesday-to-Monday match week instead of a rolling day window.',
+        )
+        parser.add_argument(
             '--with-teams',
             action='store_true',
             help='Sync teams before syncing fixtures.',
@@ -19,8 +24,13 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         today = timezone.localdate()
-        from_date = today - timezone.timedelta(days=options['days_back'])
-        to_date = today + timezone.timedelta(days=options['days_ahead'])
+        if options['current_week']:
+            days_since_tuesday = (today.weekday() - 1) % 7
+            from_date = today - timezone.timedelta(days=days_since_tuesday)
+            to_date = from_date + timezone.timedelta(days=6)
+        else:
+            from_date = today - timezone.timedelta(days=options['days_back'])
+            to_date = today + timezone.timedelta(days=options['days_ahead'])
 
         sync_options = {
             'from_date': from_date.isoformat(),

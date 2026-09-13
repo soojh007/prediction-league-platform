@@ -956,6 +956,26 @@ class LeagueJoinFlowTests(TestCase):
         self.assertEqual(sync_kwargs['private_league_id'], self.spl.id)
         self.assertIn('Syncing API fixtures from 2026-09-11 to 2026-09-14.', out.getvalue())
 
+    def test_sync_recent_api_fixtures_can_use_current_match_week(self):
+        out = StringIO()
+        with patch('leagues.management.commands.sync_recent_api_fixtures.timezone.localdate', return_value=date(2026, 9, 13)):
+            with patch('leagues.management.commands.sync_recent_api_fixtures.call_command') as sync_call:
+                call_command(
+                    'sync_recent_api_fixtures',
+                    private_league_id=self.spl.id,
+                    current_week=True,
+                    stdout=out,
+                )
+
+        sync_call.assert_called_once()
+        sync_args, sync_kwargs = sync_call.call_args
+        self.assertEqual(sync_args, ('sync_api_fixtures',))
+        self.assertEqual(sync_kwargs['from_date'], '2026-09-08')
+        self.assertEqual(sync_kwargs['to_date'], '2026-09-14')
+        self.assertFalse(sync_kwargs['with_teams'])
+        self.assertEqual(sync_kwargs['private_league_id'], self.spl.id)
+        self.assertIn('Syncing API fixtures from 2026-09-08 to 2026-09-14.', out.getvalue())
+
     def test_sportmonks_event_error_does_not_block_score_sync(self):
         self.spl.competition.api_league_id = 1357
         self.spl.competition.api_season_id = 28091
