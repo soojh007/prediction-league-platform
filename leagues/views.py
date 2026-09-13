@@ -852,6 +852,40 @@ def join_league(request):
     return redirect('dashboard')
 
 
+def maybe_auto_sync_recent_fixtures(league):
+    if not getattr(settings, 'SPORTMONKS_API_TOKEN', ''):
+        return
+
+    interval = timedelta(minutes=getattr(settings, 'AUTO_FIXTURE_SYNC_INTERVAL_MINUTES', 20))
+    last_sync = league.competition.last_fixture_sync_at
+    if last_sync and timezone.now() - last_sync < interval:
+        return
+
+    today = timezone.localdate()
+    try:
+        stats = SportMonksSyncService().sync_fixtures(
+            league.competition,
+            from_date=(today - timedelta(days=1)).isoformat(),
+            to_date=(today + timedelta(days=1)).isoformat(),
+        )
+    except (SportMonksError, ImproperlyConfigured):
+        return
+
+    recalculated = 0
+    for match_id in stats['finished_match_ids']:
+        recalculated += recalculate_match_points(
+            league,
+            Match.objects.get(pk=match_id, competition=league.competition),
+        )
+
+    league.competition.last_fixture_sync_at = timezone.now()
+    league.competition.last_fixture_sync_summary = (
+        f"Auto checked {stats['checked']}, updated {stats['updated']}, "
+        f"events {stats.get('event_count', 0)}, recalculated {recalculated}"
+    )[:255]
+    league.competition.save(update_fields=['last_fixture_sync_at', 'last_fixture_sync_summary'])
+
+
 @login_required
 def league_detail(request, pk):
     if is_organiser(request.user):
@@ -864,6 +898,7 @@ def league_detail(request, pk):
         competition__active=True,
     )
     membership = get_membership_or_404(league, request.user)
+    maybe_auto_sync_recent_fixtures(league)
     matches = visible_matches_for(league, membership)
     predictions = {
         prediction.match_id: prediction

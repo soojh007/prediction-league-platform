@@ -248,6 +248,63 @@ class LeagueJoinFlowTests(TestCase):
         self.assertContains(details_response, 'Scorers')
         self.assertContains(details_response, 'Ryoya Taniguchi')
 
+    @override_settings(SPORTMONKS_API_TOKEN='test-token')
+    def test_league_detail_auto_syncs_recent_fixtures_when_stale(self):
+        self.spl.prediction_mode = PrivateLeague.PredictionMode.ALL
+        self.spl.competition.api_league_id = 1357
+        self.spl.save()
+        self.spl.competition.save(update_fields=['api_league_id'])
+        home = Team.objects.create(competition=self.spl.competition, name='Tampines Rovers')
+        away = Team.objects.create(competition=self.spl.competition, name='Balestier Khalsa')
+        match = Match.objects.create(
+            competition=self.spl.competition,
+            api_fixture_id=19778330,
+            home_team=home,
+            away_team=away,
+            kickoff_time=timezone.now() - timezone.timedelta(hours=1),
+            status=Match.Status.UPCOMING,
+        )
+        prediction = Prediction.objects.create(
+            user=self.player,
+            league=self.spl,
+            match=match,
+            predicted_home_score=2,
+            predicted_away_score=1,
+        )
+        LeagueMembership.objects.create(league=self.spl, user=self.player)
+
+        class FakeSyncService:
+            def sync_fixtures(self, competition, *, from_date=None, to_date=None):
+                match.status = Match.Status.FINISHED
+                match.home_score = 2
+                match.away_score = 1
+                match.save(update_fields=['status', 'home_score', 'away_score'])
+                return {
+                    'checked': 1,
+                    'created': 0,
+                    'updated': 1,
+                    'skipped': 0,
+                    'match_ids': [match.id],
+                    'finished_match_ids': [match.id],
+                    'event_count': 0,
+                    'event_errors': 0,
+                }
+
+        self.client.force_login(self.player)
+        with patch('leagues.views.SportMonksSyncService', FakeSyncService):
+            response = self.client.get(self.spl.get_absolute_url())
+
+        prediction.refresh_from_db()
+        match.refresh_from_db()
+        self.spl.competition.refresh_from_db()
+        self.assertContains(response, 'Match details')
+        self.assertEqual(match.status, Match.Status.FINISHED)
+        self.assertEqual(match.home_score, 2)
+        self.assertEqual(match.away_score, 1)
+        self.assertEqual(prediction.points, 7)
+        self.assertIsNotNone(self.spl.competition.last_fixture_sync_at)
+        self.assertIn('Auto checked 1', self.spl.competition.last_fixture_sync_summary)
+
     def test_league_detail_shows_active_noticeboard_messages(self):
         self.spl.prediction_mode = PrivateLeague.PredictionMode.ALL
         self.spl.save()
