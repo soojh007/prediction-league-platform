@@ -380,7 +380,23 @@ class SportMonksSyncService:
 
         MatchEvent.objects.filter(match=match).delete()
         MatchEvent.objects.bulk_create(events)
+        self._correct_score_from_goal_events(match, home_team=home_team, away_team=away_team, events=events)
         return len(events)
+
+    def _correct_score_from_goal_events(self, match, *, home_team, away_team, events):
+        if not events:
+            return
+
+        home_goals = sum(1 for event in events if event.team_id == home_team.id)
+        away_goals = sum(1 for event in events if event.team_id == away_team.id)
+        if home_goals == match.home_score and away_goals == match.away_score:
+            return
+        if home_goals + away_goals <= (match.home_score or 0) + (match.away_score or 0):
+            return
+
+        match.home_score = home_goals
+        match.away_score = away_goals
+        match.save(update_fields=['home_score', 'away_score'])
 
     def _event_from_api_event(self, event, *, match, home_team, away_team, home_data, away_data):
         event_type = self._event_type(event)

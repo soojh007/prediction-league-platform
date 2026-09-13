@@ -941,6 +941,57 @@ class LeagueJoinFlowTests(TestCase):
         self.assertEqual(match.home_score, 1)
         self.assertEqual(match.away_score, 0)
 
+    def test_sportmonks_goal_events_correct_wrong_score_rows(self):
+        self.spl.competition.api_league_id = 1357
+        self.spl.competition.api_season_id = 28091
+        self.spl.competition.save(update_fields=['api_league_id', 'api_season_id'])
+        home = Team.objects.create(competition=self.spl.competition, name='Hougang United', api_team_id=5335)
+        away = Team.objects.create(competition=self.spl.competition, name='Lion City Sailors', api_team_id=8007)
+        match = Match.objects.create(
+            competition=self.spl.competition,
+            api_fixture_id=19778331,
+            home_team=home,
+            away_team=away,
+            kickoff_time=timezone.now() - timezone.timedelta(hours=1),
+            status=Match.Status.UPCOMING,
+        )
+
+        class FakeSportMonksClient:
+            def fixtures(self, season_id):
+                return [{
+                    'id': 19778331,
+                    'starting_at': match.kickoff_time.isoformat(),
+                    'state_id': 5,
+                    'state': {'short_name': 'FT'},
+                    'participants': [
+                        {'id': 5335, 'name': 'Hougang United', 'meta': {'location': 'home'}},
+                        {'id': 8007, 'name': 'Lion City Sailors', 'meta': {'location': 'away'}},
+                    ],
+                    'scores': [
+                        {'participant_id': 5335, 'description': 'CURRENT', 'score': {'goals': 0, 'participant': 'home'}},
+                        {'participant_id': 8007, 'description': 'CURRENT', 'score': {'goals': 1, 'participant': 'away'}},
+                    ],
+                }]
+
+            def fixture(self, fixture_id):
+                return {
+                    'id': fixture_id,
+                    'events': [
+                        {'id': 1, 'minute': 17, 'participant_id': 5335, 'type': {'name': 'Goal'}, 'player': {'display_name': 'Ayman Kassimi'}},
+                        {'id': 2, 'minute': 22, 'participant_id': 5335, 'type': {'name': 'Goal'}, 'player': {'display_name': 'Oakley Cannonier'}},
+                        {'id': 3, 'minute': 39, 'participant_id': 8007, 'type': {'name': 'Goal'}, 'player': {'display_name': 'Antonio Mance'}},
+                        {'id': 4, 'minute': 86, 'participant_id': 8007, 'type': {'name': 'Goal'}, 'player': {'display_name': 'Bobby Adekanye'}},
+                    ],
+                }
+
+        service = SportMonksSyncService(client=FakeSportMonksClient())
+        stats = service.sync_fixtures(self.spl.competition)
+        match.refresh_from_db()
+
+        self.assertEqual(stats['event_count'], 4)
+        self.assertEqual(match.home_score, 2)
+        self.assertEqual(match.away_score, 2)
+
     def test_sportmonks_sync_keeps_local_spl_team_branding(self):
         self.spl.competition.api_league_id = 1357
         self.spl.competition.api_season_id = 28091
