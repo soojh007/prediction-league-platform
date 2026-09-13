@@ -166,6 +166,38 @@
                         {% endfor %}
                     </div>
                 </details>
+                {% if matchday.show_standings_after and league_standings %}
+                    <section class="standings-panel">
+                        <div class="standings-heading">
+                            <div>
+                                <p class="eyebrow">League standings</p>
+                                <h3>Current table</h3>
+                            </div>
+                            <span>Pts</span>
+                        </div>
+                        <div class="standings-table" role="table" aria-label="Current league standings">
+                            <div class="standings-row standings-header" role="row">
+                                <span role="columnheader">#</span>
+                                <span role="columnheader">Club</span>
+                                <span role="columnheader">P</span>
+                                <span role="columnheader">GD</span>
+                                <span role="columnheader">Pts</span>
+                            </div>
+                            {% for row in league_standings %}
+                                <div class="standings-row" role="row">
+                                    <span role="cell">{{ row.rank }}</span>
+                                    <span class="standings-team" role="cell">
+                                        {% include "leagues/partials/team_badge.html" with team=row.team %}
+                                        {{ row.team.name }}
+                                    </span>
+                                    <span role="cell">{{ row.played }}</span>
+                                    <span role="cell">{{ row.goal_difference }}</span>
+                                    <strong role="cell">{{ row.points }}</strong>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                {% endif %}
             {% empty %}
                 <div class="empty-state">
                     <strong>Fixtures are being prepared</strong>

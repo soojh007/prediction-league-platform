@@ -909,6 +909,7 @@ def league_detail(request, pk):
     league_status = build_league_status(request.user, league, matches, predictions, leaderboard)
     current_week_start, current_week_end = get_leaderboard_week(timezone.localtime())
     matchdays = build_matchdays(matches, open_from=current_week_start, open_until=current_week_end)
+    league_standings = build_competition_standings(league.competition)
     now = timezone.now()
     notices = (
         LeagueNotice.objects
@@ -926,6 +927,7 @@ def league_detail(request, pk):
         'has_predictions': has_predictions,
         'leaderboard': leaderboard,
         'league_status': league_status,
+        'league_standings': league_standings,
         'notices': notices,
     })
 
@@ -1472,7 +1474,82 @@ def build_matchdays(matches, open_match_limit=None, open_from=None, open_until=N
     for group in grouped:
         group['is_complete'] = all(match.status == Match.Status.FINISHED for match in group['matches'])
 
-    return sorted(grouped, key=lambda group: (group['is_complete'], group['date']))
+    grouped = sorted(grouped, key=lambda group: (group['is_complete'], group['date']))
+    open_groups = [group for group in grouped if not group['collapsed']]
+    if open_groups:
+        open_groups[-1]['show_standings_after'] = True
+    return grouped
+
+
+def build_competition_standings(competition):
+    teams = {
+        team.id: {
+            'team': team,
+            'played': 0,
+            'won': 0,
+            'drawn': 0,
+            'lost': 0,
+            'goals_for': 0,
+            'goals_against': 0,
+            'goal_difference': 0,
+            'points': 0,
+        }
+        for team in competition.teams.all()
+    }
+    finished_matches = (
+        Match.objects
+        .filter(
+            competition=competition,
+            status=Match.Status.FINISHED,
+            counts_towards_league=True,
+            home_score__isnull=False,
+            away_score__isnull=False,
+        )
+        .select_related('home_team', 'away_team')
+    )
+
+    for match in finished_matches:
+        home_row = teams.get(match.home_team_id)
+        away_row = teams.get(match.away_team_id)
+        if home_row is None or away_row is None:
+            continue
+
+        update_standing_row(home_row, match.home_score, match.away_score)
+        update_standing_row(away_row, match.away_score, match.home_score)
+
+    for row in teams.values():
+        row['goal_difference'] = row['goals_for'] - row['goals_against']
+
+    rows = sorted(
+        teams.values(),
+        key=lambda row: (
+            -row['points'],
+            -row['goal_difference'],
+            -row['goals_for'],
+            row['team'].name.lower(),
+        ),
+    )
+    return [
+        {
+            **row,
+            'rank': index,
+        }
+        for index, row in enumerate(rows, start=1)
+    ]
+
+
+def update_standing_row(row, goals_for, goals_against):
+    row['played'] += 1
+    row['goals_for'] += goals_for
+    row['goals_against'] += goals_against
+    if goals_for > goals_against:
+        row['won'] += 1
+        row['points'] += 3
+    elif goals_for == goals_against:
+        row['drawn'] += 1
+        row['points'] += 1
+    else:
+        row['lost'] += 1
 
 
 def matchday_group_label(match, match_date):

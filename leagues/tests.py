@@ -211,6 +211,48 @@ class LeagueJoinFlowTests(TestCase):
         self.assertTrue(next(matchday for matchday in matchdays if matchday['title'] == 'Match day 2')['collapsed'])
         self.assertEqual([matchday['title'] for matchday in matchdays], ['Match day 1', 'Match day 2', 'Community Shield'])
 
+    def test_league_detail_shows_current_competition_standings_after_open_week(self):
+        self.spl.prediction_mode = PrivateLeague.PredictionMode.ALL
+        self.spl.save()
+        tampines = Team.objects.create(competition=self.spl.competition, name='Tampines Rovers')
+        balestier = Team.objects.create(competition=self.spl.competition, name='Balestier Khalsa')
+        geylang = Team.objects.create(competition=self.spl.competition, name='Geylang International')
+        now = timezone.localtime()
+        days_since_tuesday = (now.weekday() - 1) % 7
+        week_start = (now - timezone.timedelta(days=days_since_tuesday)).replace(hour=0, minute=0, second=0, microsecond=0)
+        Match.objects.create(
+            competition=self.spl.competition,
+            home_team=tampines,
+            away_team=balestier,
+            kickoff_time=week_start + timezone.timedelta(days=1),
+            status=Match.Status.FINISHED,
+            home_score=2,
+            away_score=1,
+            stage='1',
+        )
+        Match.objects.create(
+            competition=self.spl.competition,
+            home_team=balestier,
+            away_team=geylang,
+            kickoff_time=week_start - timezone.timedelta(days=2),
+            status=Match.Status.FINISHED,
+            home_score=5,
+            away_score=0,
+            stage='Community Shield',
+            counts_towards_league=False,
+        )
+        LeagueMembership.objects.create(league=self.spl, user=self.player)
+
+        self.client.force_login(self.player)
+        response = self.client.get(self.spl.get_absolute_url())
+        standings = response.context['league_standings']
+
+        self.assertContains(response, 'League standings')
+        self.assertEqual(standings[0]['team'], tampines)
+        self.assertEqual(standings[0]['played'], 1)
+        self.assertEqual(standings[0]['points'], 3)
+        self.assertEqual(next(row for row in standings if row['team'] == balestier)['goal_difference'], -1)
+
     def test_finished_match_links_to_match_details_with_final_score(self):
         self.spl.prediction_mode = PrivateLeague.PredictionMode.ALL
         self.spl.save()

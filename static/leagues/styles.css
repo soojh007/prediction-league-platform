@@ -1215,6 +1215,89 @@ textarea {
     font-weight: 800;
 }
 
+.standings-panel {
+    display: grid;
+    gap: 10px;
+    border: 1px solid #9fd3c7;
+    border-radius: var(--radius);
+    background: #f1fbf8;
+    padding: 14px;
+}
+
+.standings-heading,
+.standings-row {
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr) 34px 42px 42px;
+    align-items: center;
+    gap: 8px;
+}
+
+.standings-heading {
+    grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.standings-heading h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.standings-heading > span {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 850;
+    text-transform: uppercase;
+}
+
+.standings-table {
+    display: grid;
+    gap: 6px;
+}
+
+.standings-row {
+    border: 1px solid #c7ded8;
+    border-radius: 8px;
+    background: #ffffff;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 750;
+    min-height: 38px;
+    padding: 7px 10px;
+}
+
+.standings-header {
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    font-size: 11px;
+    min-height: 0;
+    padding-block: 0;
+    text-transform: uppercase;
+}
+
+.standings-team {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 850;
+}
+
+.standings-team .team-badge {
+    width: 24px;
+    height: 24px;
+}
+
+.standings-row > span:not(.standings-team),
+.standings-row > strong {
+    text-align: right;
+}
+
+.standings-row > span:first-child {
+    text-align: left;
+}
+
 .league-card,
 .fixture-card,
 .leaderboard-row {
