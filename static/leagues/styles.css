@@ -1244,17 +1244,17 @@ textarea {
 .dashboard-leaderboards {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
+    gap: 10px;
 }
 
 .mini-leaderboard {
     display: grid;
     align-content: start;
-    gap: 8px;
+    gap: 6px;
     border: 1px solid var(--line);
     border-radius: var(--radius);
     background: #f8fafc;
-    padding: 12px;
+    padding: 10px;
 }
 
 .current-week-leaderboard {
@@ -1274,6 +1274,7 @@ textarea {
     border-color: #efd8a5;
     background: #fffaf0;
     box-shadow: inset 4px 0 0 #d49619;
+    padding-block: 9px;
 }
 
 .current-week-leaderboard .rank {
@@ -1296,12 +1297,12 @@ textarea {
     justify-content: space-between;
     gap: 10px;
     color: var(--muted);
-    font-size: 13px;
+    font-size: 12px;
 }
 
 .mini-leaderboard-heading strong {
     color: var(--ink);
-    font-size: 16px;
+    font-size: 15px;
 }
 
 .mini-leaderboard summary {
@@ -1315,15 +1316,22 @@ textarea {
 
 .mini-leaderboard-row {
     display: grid;
-    grid-template-columns: 34px minmax(0, 1fr) auto;
+    grid-template-columns: 28px minmax(0, 1fr) auto;
     align-items: center;
-    gap: 8px;
+    gap: 7px;
     border: 1px solid var(--line);
-    border-radius: 8px;
+    border-radius: 7px;
     background: var(--surface);
     color: var(--ink);
-    padding: 10px;
+    min-height: 42px;
+    padding: 6px 9px;
     text-decoration: none;
+}
+
+.mini-leaderboard-row .rank {
+    width: 28px;
+    height: 28px;
+    font-size: 13px;
 }
 
 .mini-leaderboard-row strong,
@@ -1339,7 +1347,7 @@ textarea {
 
 .mini-leaderboard-row > span:last-child {
     color: var(--muted);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 800;
 }
 
@@ -1350,7 +1358,7 @@ textarea {
 
 .leaderboard-expander summary {
     color: var(--blue);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 900;
     text-align: right;
 }

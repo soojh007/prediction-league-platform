@@ -567,6 +567,8 @@ class LeagueJoinFlowTests(TestCase):
         self.assertContains(response, 'Arsenal')
         self.assertContains(response, 'How player picked')
         self.assertContains(response, '2 - 1')
+        self.assertContains(response, f'href="{reverse("dashboard")}"')
+        self.assertContains(response, 'Back to Dashboard')
 
     def test_leaderboard_detail_hides_other_players_unsettled_predictions(self):
         self.epl.prediction_mode = PrivateLeague.PredictionMode.ALL

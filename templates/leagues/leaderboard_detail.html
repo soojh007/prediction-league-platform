@@ -9,7 +9,7 @@
         <h1>{{ display_name }}</h1>
         <p class="helper-text">{{ league.name }}</p>
     </div>
-    <a class="secondary-button" href="{{ league.get_absolute_url }}">Back to league</a>
+    <a class="secondary-button" href="{% url 'dashboard' %}">Back to Dashboard</a>
 </section>
 
 <section class="player-detail-grid">
