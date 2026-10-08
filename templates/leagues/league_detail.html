@@ -125,9 +125,17 @@
 
         <div class="matchday-list">
             {% for matchday in matchdays %}
-                <details class="matchday-group" {% if not matchday.collapsed %}open{% endif %}>
+                {% if matchday.section_title %}
+                    <div class="matchday-section-heading{% if matchday.is_complete %} completed{% endif %}">
+                        <h3>{{ matchday.section_title }}</h3>
+                    </div>
+                {% endif %}
+                <details class="matchday-group{% if matchday.is_complete %} completed{% endif %}" {% if not matchday.collapsed %}open{% endif %}>
                     <summary class="matchday-heading">
-                        <h3>{{ matchday.title }}</h3>
+                        <div>
+                            <h3>{{ matchday.title }}</h3>
+                            <small>{{ matchday.date_label }}</small>
+                        </div>
                         <span>{{ matchday.matches|length }} match{{ matchday.matches|length|pluralize:"es" }}</span>
                     </summary>
 

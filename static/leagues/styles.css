@@ -1168,6 +1168,25 @@ textarea {
     gap: 14px;
 }
 
+.matchday-section-heading {
+    border-bottom: 2px solid var(--ink);
+    padding: 4px 0 8px;
+}
+
+.matchday-section-heading:not(:first-child) {
+    margin-top: 14px;
+}
+
+.matchday-section-heading h3 {
+    margin: 0;
+    font-size: 14px;
+}
+
+.matchday-section-heading.completed {
+    border-bottom-color: var(--line);
+    color: var(--muted);
+}
+
 .matchday-group {
     display: grid;
     gap: 8px;
@@ -1207,6 +1226,21 @@ textarea {
 .matchday-heading h3 {
     margin: 0;
     font-size: 17px;
+}
+
+.matchday-heading small {
+    display: block;
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.matchday-group.completed .matchday-heading h3 {
+    color: #4f5967;
+    font-family: Georgia, "Times New Roman", serif;
+    font-style: italic;
+    font-weight: 600;
 }
 
 .matchday-heading span {

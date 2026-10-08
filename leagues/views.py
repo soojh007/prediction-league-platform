@@ -1436,9 +1436,7 @@ def build_league_status(user, league, matches, predictions, leaderboard):
 
 
 def build_matchdays(matches, open_match_limit=None, open_from=None, open_until=None):
-    grouped = []
-    current_key = None
-    current_group = None
+    groups_by_key = {}
     visible_open_matches = 0
 
     for match in matches:
@@ -1447,7 +1445,8 @@ def build_matchdays(matches, open_match_limit=None, open_from=None, open_until=N
         local_kickoff = timezone.localtime(match.kickoff_time)
         match_date = local_kickoff.date()
         group_key, group_title = matchday_group_label(match, match_date)
-        if group_key != current_key:
+        current_group = groups_by_key.get(group_key)
+        if current_group is None:
             is_current_window = (
                 open_from is not None
                 and open_until is not None
@@ -1457,28 +1456,52 @@ def build_matchdays(matches, open_match_limit=None, open_from=None, open_until=N
                 collapsed = not is_current_window
             else:
                 collapsed = bool(open_match_limit is not None and visible_open_matches >= open_match_limit)
-            current_key = group_key
             current_group = {
                 'date': match_date,
+                'end_date': match_date,
                 'title': group_title,
                 'matches': [],
                 'collapsed': collapsed,
             }
-            grouped.append(current_group)
+            groups_by_key[group_key] = current_group
+        else:
+            current_group['date'] = min(current_group['date'], match_date)
+            current_group['end_date'] = max(current_group['end_date'], match_date)
+            if open_from is not None and open_until is not None and open_from <= local_kickoff < open_until:
+                current_group['collapsed'] = False
 
         if open_match_limit is not None and not match.is_locked:
             visible_open_matches += 1
 
         current_group['matches'].append(match)
 
+    grouped = list(groups_by_key.values())
     for group in grouped:
         group['is_complete'] = all(match.status == Match.Status.FINISHED for match in group['matches'])
+        group['date_label'] = matchday_date_label(group['date'], group['end_date'])
 
-    grouped = sorted(grouped, key=lambda group: (group['is_complete'], group['date']))
+    upcoming = sorted((group for group in grouped if not group['is_complete']), key=lambda group: group['date'])
+    completed = sorted((group for group in grouped if group['is_complete']), key=lambda group: group['date'], reverse=True)
+    grouped = upcoming + completed
+    if upcoming:
+        upcoming[0]['section_title'] = 'Upcoming match days'
+    if completed:
+        completed[0]['section_title'] = 'Completed match days'
+
     open_groups = [group for group in grouped if not group['collapsed']]
     if open_groups:
         open_groups[-1]['show_standings_after'] = True
     return grouped
+
+
+def matchday_date_label(start_date, end_date):
+    if start_date == end_date:
+        return start_date.strftime('%a, %d %b %Y')
+    if start_date.year != end_date.year:
+        return f"{start_date.strftime('%d %b %Y')} - {end_date.strftime('%d %b %Y')}"
+    if start_date.month != end_date.month:
+        return f"{start_date.strftime('%d %b')} - {end_date.strftime('%d %b %Y')}"
+    return f"{start_date.strftime('%d')} - {end_date.strftime('%d %b %Y')}"
 
 
 def build_competition_standings(competition):

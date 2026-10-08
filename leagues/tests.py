@@ -192,6 +192,14 @@ class LeagueJoinFlowTests(TestCase):
             competition=self.spl.competition,
             home_team=home,
             away_team=away,
+            kickoff_time=week_end + timezone.timedelta(days=2),
+            status=Match.Status.UPCOMING,
+            stage='1',
+        )
+        Match.objects.create(
+            competition=self.spl.competition,
+            home_team=home,
+            away_team=away,
             kickoff_time=week_start - timezone.timedelta(days=2),
             status=Match.Status.FINISHED,
             home_score=2,
@@ -210,6 +218,16 @@ class LeagueJoinFlowTests(TestCase):
         self.assertFalse(next(matchday for matchday in matchdays if matchday['title'] == 'Match day 1')['collapsed'])
         self.assertTrue(next(matchday for matchday in matchdays if matchday['title'] == 'Match day 2')['collapsed'])
         self.assertEqual([matchday['title'] for matchday in matchdays], ['Match day 1', 'Match day 2', 'Community Shield'])
+        self.assertEqual(len(matchdays[0]['matches']), 2)
+        self.assertEqual(matchdays[0]['section_title'], 'Upcoming match days')
+        self.assertEqual(matchdays[2]['section_title'], 'Completed match days')
+        self.assertContains(response, 'matchday-group completed')
+        self.assertEqual(
+            matchdays[0]['date_label'],
+            f"{(week_start + timezone.timedelta(days=1)).strftime('%d')} - "
+            f"{(week_end + timezone.timedelta(days=2)).strftime('%d %b %Y')}",
+        )
+        self.assertContains(response, (week_end + timezone.timedelta(days=2)).strftime('%d %b %Y'))
 
     def test_league_detail_shows_current_competition_standings_after_open_week(self):
         self.spl.prediction_mode = PrivateLeague.PredictionMode.ALL
