@@ -736,8 +736,9 @@ def organiser_match_result(request, league_pk, match_pk):
     if request.method == 'POST':
         form = MatchResultForm(request.POST, instance=match)
         if form.is_valid():
+            match.manual_result_override = True
             form.save()
-            recalculated = recalculate_match_points(league, match)
+            recalculated = match.recalculate_prediction_points()
             messages.success(request, f'Result saved. Recalculated {recalculated} predictions.')
             return redirect('organiser_matches', pk=league.pk)
     else:

@@ -384,7 +384,7 @@ class SportMonksSyncService:
         return len(events)
 
     def _correct_score_from_goal_events(self, match, *, home_team, away_team, events):
-        if not events:
+        if match.manual_result_override or not events:
             return
 
         home_goals = sum(1 for event in events if event.team_id == home_team.id)
@@ -467,13 +467,15 @@ class SportMonksSyncService:
         return None
 
     def _update_api_linked_match(self, *, match, defaults, is_finished):
-        update_fields = ['competition', 'home_team', 'away_team', 'status', 'home_score', 'away_score']
+        update_fields = ['competition', 'home_team', 'away_team']
         match.competition = defaults['competition']
         match.home_team = defaults['home_team']
         match.away_team = defaults['away_team']
-        match.status = defaults['status']
-        match.home_score = defaults['home_score'] if is_finished else None
-        match.away_score = defaults['away_score'] if is_finished else None
+        if not match.manual_result_override:
+            match.status = defaults['status']
+            match.home_score = defaults['home_score'] if is_finished else None
+            match.away_score = defaults['away_score'] if is_finished else None
+            update_fields.extend(['status', 'home_score', 'away_score'])
 
         if self._should_replace_stage(match.stage, defaults['stage']):
             match.stage = defaults['stage']
@@ -487,7 +489,7 @@ class SportMonksSyncService:
 
     def _attach_api_fixture_to_manual_match(self, *, match, fixture_id, is_finished, home_score, away_score, stage):
         match.api_fixture_id = fixture_id
-        if is_finished:
+        if is_finished and not match.manual_result_override:
             match.status = Match.Status.FINISHED
             match.home_score = home_score
             match.away_score = away_score

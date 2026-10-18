@@ -164,6 +164,10 @@ class Match(models.Model):
     away_score = models.IntegerField(null=True, blank=True)
     featured = models.BooleanField(default=False)
     counts_towards_league = models.BooleanField(default=True)
+    manual_result_override = models.BooleanField(
+        default=False,
+        help_text='Preserve the manually entered result during API sync. Clear to resume API results.',
+    )
 
     class Meta:
         ordering = ['kickoff_time']
@@ -174,6 +178,14 @@ class Match(models.Model):
 
     def __str__(self):
         return f'{self.home_team} vs {self.away_team}'
+
+    def recalculate_prediction_points(self):
+        predictions = list(Prediction.objects.filter(match=self))
+        for prediction in predictions:
+            prediction.match = self
+            prediction.points = prediction.calculate_points()
+        Prediction.objects.bulk_update(predictions, ['points'])
+        return len(predictions)
 
 
 class MatchEvent(models.Model):

@@ -15,6 +15,59 @@ from .services.sportmonks import SportMonksClient, SportMonksError, SportMonksSy
 
 
 class LeagueJoinFlowTests(TestCase):
+    def test_admin_result_save_repairs_points_and_protects_result(self):
+        from django.contrib.admin.sites import AdminSite
+        from types import SimpleNamespace
+        from .admin import MatchAdmin
+
+        home = Team.objects.create(competition=self.spl.competition, name='Home')
+        away = Team.objects.create(competition=self.spl.competition, name='Away')
+        match = Match.objects.create(
+            competition=self.spl.competition, home_team=home, away_team=away,
+            kickoff_time=timezone.now(), status=Match.Status.FINISHED,
+            home_score=0, away_score=1,
+        )
+        other = PrivateLeague.objects.create(
+            name='Other', owner=self.owner, competition=self.spl.competition,
+        )
+        predictions = [Prediction.objects.create(
+            user=self.player, league=league, match=match,
+            predicted_home_score=2, predicted_away_score=1,
+        ) for league in (self.spl, other)]
+        match.home_score = 2
+        admin = MatchAdmin(Match, AdminSite())
+        with patch.object(admin, 'message_user'):
+            admin.save_model(None, match, SimpleNamespace(changed_data=['home_score']), True)
+        match.refresh_from_db()
+        self.assertTrue(match.manual_result_override)
+        for prediction in predictions:
+            prediction.refresh_from_db()
+            self.assertEqual(prediction.points, 7)
+
+        service = SportMonksSyncService(client=object())
+        defaults = dict(competition=self.spl.competition, home_team=home, away_team=away,
+                        status=Match.Status.FINISHED, home_score=0, away_score=1,
+                        stage='', venue='')
+        service._update_api_linked_match(match=match, defaults=defaults, is_finished=True)
+        service._correct_score_from_goal_events(
+            match, home_team=home, away_team=away,
+            events=[SimpleNamespace(team_id=away.id)] * 5,
+        )
+        match.refresh_from_db()
+        self.assertEqual((match.home_score, match.away_score), (2, 1))
+
+        Prediction.objects.filter(pk=predictions[0].pk).update(points=0)
+        with patch.object(admin, 'message_user'):
+            admin.save_model(None, match, SimpleNamespace(changed_data=[]), True)
+        predictions[0].refresh_from_db()
+        self.assertEqual(predictions[0].points, 7)
+
+        match.manual_result_override = False
+        match.save()
+        service._update_api_linked_match(match=match, defaults=defaults, is_finished=True)
+        match.refresh_from_db()
+        self.assertEqual((match.home_score, match.away_score), (0, 1))
+
     def setUp(self):
         self.owner = User.objects.create_user(username='owner', password='password123', is_staff=True)
         self.player = User.objects.create_user(username='player', password='password123')

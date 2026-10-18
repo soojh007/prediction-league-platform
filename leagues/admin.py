@@ -66,6 +66,13 @@ class MatchAdmin(admin.ModelAdmin):
     list_filter = ('competition', 'status', 'featured', 'counts_towards_league')
     search_fields = ('home_team__name', 'away_team__name', 'venue')
 
+    def save_model(self, request, obj, form, change):
+        if {'home_score', 'away_score', 'status'} & set(form.changed_data):
+            obj.manual_result_override = True
+        super().save_model(request, obj, form, change)
+        count = obj.recalculate_prediction_points()
+        self.message_user(request, f'Recalculated {count} predictions across all leagues.')
+
 
 @admin.register(MatchEvent)
 class MatchEventAdmin(admin.ModelAdmin):
