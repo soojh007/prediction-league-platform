@@ -1107,11 +1107,17 @@ def match_deadline_label(match):
 
 def build_match_info(league, match, user):
     prediction_summary = build_match_prediction_summary(league, match, user)
+    is_goalless = (
+        match.status == Match.Status.FINISHED
+        and match.home_score == 0
+        and match.away_score == 0
+    )
     return {
         'prediction_summary': prediction_summary,
         'home_form': build_team_recent_form(match.competition, match.home_team, match.kickoff_time),
         'away_form': build_team_recent_form(match.competition, match.away_team, match.kickoff_time),
-        'events': match.events.select_related('team').all(),
+        'is_goalless': is_goalless,
+        'events': [] if is_goalless else match.events.select_related('team').all(),
     }
 
 

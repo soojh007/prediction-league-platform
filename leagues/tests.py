@@ -15,6 +15,26 @@ from .services.sportmonks import SportMonksClient, SportMonksError, SportMonksSy
 
 
 class LeagueJoinFlowTests(TestCase):
+    def test_goalless_result_hides_stale_api_scorers(self):
+        self.spl.prediction_mode = PrivateLeague.PredictionMode.ALL
+        self.spl.save()
+        home = Team.objects.create(competition=self.spl.competition, name='Home')
+        away = Team.objects.create(competition=self.spl.competition, name='Away')
+        match = Match.objects.create(
+            competition=self.spl.competition, home_team=home, away_team=away,
+            kickoff_time=timezone.now(), status=Match.Status.FINISHED,
+            home_score=0, away_score=0, manual_result_override=True,
+        )
+        MatchEvent.objects.create(
+            match=match, team=home, event_type='Goal', player_name='Stale scorer', minute=10,
+        )
+        LeagueMembership.objects.create(league=self.spl, user=self.player)
+        self.client.force_login(self.player)
+        response = self.client.get(reverse('predict', args=[self.spl.pk, match.pk]))
+        self.assertContains(response, 'No goals scored.')
+        self.assertNotContains(response, 'Stale scorer')
+        self.assertNotContains(response, 'has not returned scorer events')
+
     def test_admin_result_save_repairs_points_and_protects_result(self):
         from django.contrib.admin.sites import AdminSite
         from types import SimpleNamespace

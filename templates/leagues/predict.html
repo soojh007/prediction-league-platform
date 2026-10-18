@@ -36,7 +36,9 @@
             {% if match.status == 'FINISHED' %}
                 <div class="match-events-card">
                     <span>Scorers</span>
-                    {% if match_info.events %}
+                    {% if match_info.is_goalless %}
+                        <p>No goals scored.</p>
+                    {% elif match_info.events %}
                         <div class="match-event-list">
                             {% for event in match_info.events %}
                                 <div class="match-event-row">
